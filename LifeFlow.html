@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeFlow — Your Personal OS</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    const uid = () => Math.random().toString(36).slice(2, 9);
+    const today = () => new Date().toISOString().slice(0, 10);
+    const fmt = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const fmtFull = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+    const firstDayOfMonth = (y, m) => new Date(y, m, 1).getDay();
+
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const DAYS_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+    const QUOTES = [
+      { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+      { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+      { text: "Small daily improvements are the key to staggering long-term results.", author: "Robin Sharma" },
+      { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+      { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+      { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+      { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+    ];
+
+    const PROMPTS = [
+      "What made you smile today?",
+      "What challenge did you overcome today?",
+      "What are you grateful for today?",
+      "What is one thing you want to improve tomorrow?",
+      "Describe a moment of peace you experienced today.",
+      "What did you learn about yourself today?",
+      "Who inspired you today, and why?",
+      "What would you do differently if you could replay today?",
+    ];
+
+    const MOODS = [
+      { label: "Very Happy", icon: "😄", value: 5, color: "#22c55e" },
+      { label: "Happy",      icon: "🙂", value: 4, color: "#84cc16" },
+      { label: "Neutral",    icon: "😐", value: 3, color: "#f59e0b" },
+      { label: "Sad",        icon: "😔", value: 2, color: "#f97316" },
+      { label: "Very Sad",   icon: "😢", value: 1, color: "#ef4444" },
+    ];
+
+    const CATEGORIES = ["Personal", "Work", "Health", "Learning", "Fitness", "Finance", "Social", "Other"];
+    const PRIORITIES  = ["Low", "Medium", "High"];
+    const STATUSES    = ["To Do", "In Progress", "Completed"];
+
+    const seedTasks = [
+      { id: uid(), title: "Morning workout", desc: "30-min cardio session", due: today(), priority: "High", category: "Fitness", status: "Completed" },
+      { id: uid(), title: "Read 20 pages", desc: "Continue current book", due: today(), priority: "Medium", category: "Learning", status: "In Progress" },
+      { id: uid(), title: "Weekly review", desc: "Review goals and plan next week", due: today(), priority: "High", category: "Personal", status: "To Do" },
+    ];
+    const seedHabits = [
+      { id: uid(), name: "Morning meditation", emoji: "🧘", color: "#db2777", completions: {} },
+      { id: uid(), name: "Drink 8 glasses of water", emoji: "💧", color: "#3b82f6", completions: {} },
+      { id: uid(), name: "Read for 20 minutes", emoji: "📚", color: "#10b981", completions: {} },
+      { id: uid(), name: "Exercise", emoji: "🏃", color: "#f59e0b", completions: {} },
+    ];
+    const seedEvents = [
+      { id: uid(), title: "Team standup", desc: "Daily sync", date: today(), time: "09:00", status: "Confirmed" },
+      { id: uid(), title: "Dentist appointment", desc: "Annual checkup", date: today(), time: "14:30", status: "Confirmed" },
+    ];
+
+    function useLS(key, init) {
+      const [val, setVal] = useState(() => {
+        try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : init; }
+        catch { return init; }
+      });
+      useEffect(() => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }, [key, val]);
+      return [val, setVal];
+    }
+
+    const lightCSS = {
+      app:      { background: "#f8f7ff", color: "#1a1a2e" },
+      bg:       "#FFE0EE",
+      sidebar:  "#ffffff",
+      card:     "#ffffff",
+      input:    "#FFC7E0",
+      text:     "#1a1a2e",
+      textMuted:"#6b7280",
+      border:   "#e5e7eb",
+      hover:    "#f3f4f6",
+    };
+    const darkCSS = {
+      app:      { background: "#0f0f1a", color: "#e2e8f0" },
+      bg:       "#0f0f1a",
+      sidebar:  "#16162a",
+      card:     "#1a1a2e",
+      input:    "#0f0f1a",
+      text:     "#e2e8f0",
+      textMuted:"#94a3b8",
+      border:   "#4a1c2e",
+      hover:    "#252540",
+    };
+
+    function SectionHeader({ title, icon, action, onAction, css }) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+          <div style={{ fontWeight:600, color:css.text, fontSize:15 }}>{icon && <span style={{marginRight:6}}>{icon}</span>}{title}</div>
+          {action && <button className="lf-btn lf-btn-ghost" style={{ padding:"4px 10px", fontSize:12 }} onClick={onAction}>{action} →</button>}
+        </div>
+      );
+    }
+
+    function EmptyState({ msg, icon, css }) {
+      return <div style={{ textAlign:"center", padding:"24px 0", color:css.textMuted, fontSize:14 }}><div style={{fontSize:32, marginBottom:8}}>{icon}</div>{msg}</div>;
+    }
+
+    function StatusBadge({ status }) {
+      const c = { "To Do":["#f1f5f9","#64748b"], "In Progress":["#fef3c7","#d97706"], "Completed":["#d1fae5","#059669"] };
+      const [bg, col] = c[status] || c["To Do"];
+      return <span className="tag" style={{ background:bg, color:col }}>{status}</span>;
+    }
+
+    function PriorityBadge({ p }) {
+      const c = { High:["#fee2e2","#dc2626"], Medium:["#fef3c7","#d97706"], Low:["#d1fae5","#059669"] };
+      const [bg, col] = c[p] || c.Low;
+      return <span className="tag" style={{ background:bg, color:col }}>{p}</span>;
+    }
+
+    function getTimeOfDay() {
+      const h = new Date().getHours();
+      if (h < 12) return "morning";
+      if (h < 17) return "afternoon";
+      return "evening";
+    }
+
+    function Dashboard({ tasks, habits, events, moods, journals, todayItems, todoItems, wantItems, dailyHistory, quote, css, dark, setTab }) {
+      const todayStr = today();
+      const todayTasks = tasks.filter(t => t.due === todayStr);
+      const todayEvents = events.filter(e => e.date === todayStr);
+      const todayMood = moods.find(m => m.date === todayStr);
+      const completedToday = todayTasks.filter(t => t.status === "Completed").length;
+      const totalTasks = tasks.length;
+      const completedTotal = tasks.filter(t => t.status === "Completed").length;
+      const habitsDoneToday = habits.filter(h => h.completions[todayStr]).length;
+
+      const getStreak = (habit) => {
+        let streak = 0, d = new Date();
+        while (true) {
+          const k = d.toISOString().slice(0,10);
+          if (!habit.completions[k]) break;
+          streak++; d.setDate(d.getDate()-1);
+        }
+        return streak;
+      };
+      const maxStreak = habits.reduce((max, h) => Math.max(max, getStreak(h)), 0);
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, color: css.text }}>Good {getTimeOfDay()} ✨</h1>
+              <p style={{ color: css.textMuted, marginTop: 4 }}>{fmtFull(todayStr)}</p>
+            </div>
+            <div style={{ background: dark ? "#2d0a1e" : "#fff0f6", border: `1px solid ${dark ? "#831843" : "#fbcfe8"}`, borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>
+              <p style={{ fontSize: 14, fontStyle: "italic", color: dark ? "#fbb6ce" : "#9d174d", lineHeight: 1.5 }}>"{quote.text}"</p>
+              <p style={{ fontSize: 12, color: css.textMuted, marginTop: 6 }}>— {quote.author}</p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
+            {[
+              { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#db2777" },
+              { label: "Habits done", value: `${habitsDoneToday}/${habits.length}`, icon: "🔥", color: "#f59e0b" },
+              { label: "Best streak", value: `${maxStreak}d`, icon: "⚡", color: "#ef4444" },
+              { label: "Overall progress", value: `${totalTasks ? Math.round(completedTotal/totalTasks*100) : 0}%`, icon: "📈", color: "#10b981" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 28 }}>{s.icon}</div>
+                <div style={{ fontSize: 28, fontWeight: 600, color: s.color, marginTop: 4 }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: css.textMuted, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            {/* 1. Today's Tasks (from Tasks page) */}
+            <div className="lf-card">
+              <SectionHeader title="Today's Tasks" icon="✅" action="View all" onAction={() => setTab("tasks")} css={css} />
+              {todayTasks.length === 0 && <EmptyState msg="No tasks due today" icon="😊" css={css} />}
+              {todayTasks.slice(0, 4).map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${css.border}` }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: t.priority === "High" ? "#ef4444" : t.priority === "Medium" ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: 14, color: css.text, textDecoration: t.status === "Completed" ? "line-through" : "none", opacity: t.status === "Completed" ? 0.5 : 1 }}>{t.title}</span>
+                  <StatusBadge status={t.status} />
+                </div>
+              ))}
+            </div>
+
+            {/* 2. To Do Today (from Today page) */}
+            {(() => {
+              const done = todayItems.filter(i => i.completed).length;
+              const total = todayItems.length;
+              const pct = total ? Math.round(done / total * 100) : 0;
+              const sorted = [...todayItems].sort((a,b) => a.completed - b.completed);
+              return (
+                <div className="lf-card" style={{ background: dark ? "#1a1a2e" : "#fff", border: `1px solid ${dark ? "#3d2a4a" : "#fce7f3"}` }}>
+                  <SectionHeader title="To Do Today" icon="☀️" action="Open" onAction={() => setTab("today")} css={css} />
+                  {total > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, color: css.textMuted }}>{done} of {total} done</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#ec4899" }}>{pct}%</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #ec4899, #ec4899)" }} />
+                      </div>
+                    </div>
+                  )}
+                  {sorted.length === 0 && <EmptyState msg="Nothing planned yet" icon="☀️" css={css} />}
+                  {sorted.slice(0, 5).map(item => (
+                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${css.border}` }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${item.completed ? "#ec4899" : "#d1d5db"}`, background: item.completed ? "#ec4899" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {item.completed && <span style={{ color: "#fff", fontSize: 10, lineHeight: 1 }}>✓</span>}
+                      </div>
+                      <span style={{ flex: 1, fontSize: 13, color: css.text, textDecoration: item.completed ? "line-through" : "none", opacity: item.completed ? 0.5 : 1 }}>{item.text}</span>
+                    </div>
+                  ))}
+                  {total > 5 && <div style={{ fontSize: 11, color: css.textMuted, marginTop: 8, textAlign: "center" }}>+{total - 5} more items</div>}
+                </div>
+              );
+            })()}
+
+            {/* 3. Upcoming Events */}
+            <div className="lf-card">
+              <SectionHeader title="Upcoming Events" icon="📅" action="View all" onAction={() => setTab("calendar")} css={css} />
+              {todayEvents.length === 0 && <EmptyState msg="No events today" icon="📭" css={css} />}
+              {todayEvents.slice(0, 4).map(e => (
+                <div key={e.id} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: `1px solid ${css.border}` }}>
+                  <div style={{ background: dark ? "#831843" : "#fff0f6", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>{e.time}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: css.text }}>{e.title}</div>
+                    {e.desc && <div style={{ fontSize: 12, color: css.textMuted }}>{e.desc}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 4. Habits */}
+            <div className="lf-card">
+              <SectionHeader title="Today's Habits" icon="🔥" action="View all" onAction={() => setTab("habits")} css={css} />
+              {habits.slice(0, 5).map(h => (
+                <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0" }}>
+                  <span style={{ fontSize: 20 }}>{h.emoji}</span>
+                  <span style={{ flex: 1, fontSize: 14, color: css.text }}>{h.name}</span>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: h.completions[today()] ? h.color : "transparent", border: `2px solid ${h.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff" }}>
+                    {h.completions[today()] ? "✓" : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 5. Mood Summary */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div className="lf-card">
+                <SectionHeader title="Today's mood" icon="💫" action="Log mood" onAction={() => setTab("mood")} css={css} />
+                {todayMood ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+                    <span style={{ fontSize: 36 }}>{MOODS.find(m => m.value === todayMood.value)?.icon}</span>
+                    <div>
+                      <div style={{ fontWeight: 500, color: css.text }}>{MOODS.find(m => m.value === todayMood.value)?.label}</div>
+                      {todayMood.note && <div style={{ fontSize: 12, color: css.textMuted }}>{todayMood.note}</div>}
+                    </div>
+                  </div>
+                ) : <EmptyState msg="No mood logged yet" icon="💭" css={css} />}
+              </div>
+              <div className="lf-card">
+                <SectionHeader title="Journal" icon="📝" action="Write" onAction={() => setTab("journal")} css={css} />
+                {journals.length > 0 ? (
+                  <div style={{ fontSize: 13, color: css.textMuted, marginTop: 8, lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 11, marginBottom: 4 }}>{fmt(journals[0].date)}</div>
+                    <div style={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>{journals[0].content}</div>
+                  </div>
+                ) : <EmptyState msg="No journal entries yet" icon="✍️" css={css} />}
+              </div>
+            </div>
+
+            {/* 6. To Do List widget */}
+            {(() => {
+              const done  = todoItems.filter(i => i.completed).length;
+              const total = todoItems.length;
+              const pct   = total ? Math.round(done / total * 100) : 0;
+              const pending = [...todoItems].filter(i => !i.completed).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
+              return (
+                <div className="lf-card" style={{ border: `1px solid ${dark ? "#1e3a5f" : "#e0f2fe"}` }}>
+                  <SectionHeader title="To Do List" icon="📝" action="Open" onAction={() => setTab("todo")} css={css} />
+                  <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+                    {[{l:"Total",v:total,c:"#3b82f6"},{l:"Done",v:done,c:"#10b981"},{l:"Left",v:total-done,c:"#ec4899"}].map(s=>(
+                      <div key={s.l} style={{ flex:1, textAlign:"center", background: dark?"#0f2040":"#f0f9ff", borderRadius:10, padding:"8px 4px" }}>
+                        <div style={{ fontWeight:700, fontSize:18, color:s.c }}>{s.v}</div>
+                        <div style={{ fontSize:10, color:css.textMuted }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {total > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                        <span style={{ fontSize:11, color:css.textMuted }}>Progress</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:"#3b82f6" }}>{pct}%</span>
+                      </div>
+                      <div className="progress-bar">
+                        <div className="progress-fill" style={{ width:`${pct}%`, background:"linear-gradient(90deg,#60a5fa,#f472b6)" }} />
+                      </div>
+                    </div>
+                  )}
+                  {pending.length === 0 && <EmptyState msg={total===0?"Nothing added yet":"All done! 🎉"} icon={total===0?"📋":"✨"} css={css} />}
+                  {pending.slice(0,3).map(item => (
+                    <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${css.border}` }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background:"#60a5fa", flexShrink:0 }} />
+                      <span style={{ fontSize:13, color:css.text, flex:1 }}>{item.text}</span>
+                    </div>
+                  ))}
+                  {pending.length > 3 && <div style={{ fontSize:11, color:css.textMuted, marginTop:8, textAlign:"center" }}>+{pending.length-3} more</div>}
+                </div>
+              );
+            })()}
+
+            {/* 7. Want To Do widget */}
+            {(() => {
+              const done  = wantItems.filter(i => i.completed).length;
+              const total = wantItems.length;
+              const active = [...wantItems].filter(i => !i.completed).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
+              const recent = [...wantItems].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0,2);
+              const CATCOLORS = { Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#f472b6", Career:"#3b82f6", "Personal Growth":"#10b981", Fun:"#f97316", Other:"#94a3b8" };
+              return (
+                <div className="lf-card" style={{ border: `1px solid ${dark ? "#3d1a1a" : "#fce7f3"}` }}>
+                  <SectionHeader title="Want To Do" icon="🌟" action="Open" onAction={() => setTab("wantodo")} css={css} />
+                  <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+                    {[{l:"Goals",v:total,c:"#f472b6"},{l:"Achieved",v:done,c:"#fb923c"},{l:"Dreaming",v:total-done,c:"#f9a8d4"}].map(s=>(
+                      <div key={s.l} style={{ flex:1, textAlign:"center", background: dark?"#2d1020":"#fdf2f8", borderRadius:10, padding:"8px 4px" }}>
+                        <div style={{ fontWeight:700, fontSize:18, color:s.c }}>{s.v}</div>
+                        <div style={{ fontSize:10, color:css.textMuted }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {recent.length > 0 && (
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:css.textMuted, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:6 }}>Recently added</div>
+                      {recent.map(i => (
+                        <div key={i.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"4px 0" }}>
+                          <span style={{ fontSize:10, padding:"2px 8px", borderRadius:20, background: dark?"#2d1a2d":(CATCOLORS[i.category]||"#94a3b8")+"20", color: CATCOLORS[i.category]||"#94a3b8", fontWeight:600 }}>{i.category}</span>
+                          <span style={{ fontSize:12, color:css.text, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{i.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {active.length === 0 && <EmptyState msg={total===0?"Add your first dream":"All goals achieved! 🌟"} icon={total===0?"💭":"🎊"} css={css} />}
+                  {active.slice(0,3).map(item => (
+                    <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${css.border}` }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background: CATCOLORS[item.category]||"#f472b6", flexShrink:0 }} />
+                      <span style={{ fontSize:13, color:css.text, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.title}</span>
+                      <span style={{ fontSize:10, color:css.textMuted }}>{item.category}</span>
+                    </div>
+                  ))}
+                  {active.length > 3 && <div style={{ fontSize:11, color:css.textMuted, marginTop:8, textAlign:"center" }}>+{active.length-3} more dreams</div>}
+                </div>
+              );
+            })()}
+
+            {/* 8. Yesterday's Reflection */}
+            {(() => {
+              const yest = new Date(); yest.setDate(yest.getDate()-1);
+              const yestStr = yest.toISOString().slice(0,10);
+              const record = dailyHistory.find(h => h.date === yestStr);
+              const lavSoft  = dark ? "#2d0a1e" : "#fff5f8";
+              const lavBorder= dark ? "#9d174d" : "#fbcfe8";
+              const lavText  = dark ? "#fbb6ce" : "#be185d";
+              return (
+                <div className="lf-card" style={{ background: lavSoft, border: `1px solid ${lavBorder}` }}>
+                  <SectionHeader title="Yesterday's Reflection" icon="📖" action="View Calendar" onAction={() => setTab("calendar")} css={css} />
+                  {!record ? (
+                    <EmptyState msg="No history yet — end your day on the Today page to start tracking." icon="🌙" css={css} />
+                  ) : (
+                    <div>
+                      <div style={{ display:"flex", gap:12, marginBottom:14 }}>
+                        <div style={{ flex:1, textAlign:"center", background: dark?"#3d0a1e":"#fce7f3", borderRadius:10, padding:"10px 6px" }}>
+                          <div style={{ fontWeight:700, fontSize:22, color:lavText }}>{record.completionRate}%</div>
+                          <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>Completion</div>
+                        </div>
+                        <div style={{ flex:1, textAlign:"center", background: dark?"#1a2d1a":"#d1fae5", borderRadius:10, padding:"10px 6px" }}>
+                          <div style={{ fontWeight:700, fontSize:22, color:"#059669" }}>{record.completedCount}</div>
+                          <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>Done</div>
+                        </div>
+                        <div style={{ flex:1, textAlign:"center", background: dark?"#2d2d1a":"#fef3c7", borderRadius:10, padding:"10px 6px" }}>
+                          <div style={{ fontWeight:700, fontSize:22, color:"#d97706" }}>{record.totalCount}</div>
+                          <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>Total</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize:11, fontWeight:700, color:css.textMuted, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>Completed items</div>
+                      {record.items.filter(i=>i.completed).slice(0,3).map(i => (
+                        <div key={i.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 0", borderBottom:`1px solid ${css.border}` }}>
+                          <span style={{ color:"#ec4899", fontSize:13, flexShrink:0 }}>✓</span>
+                          <span style={{ fontSize:13, color:css.text, opacity:0.8 }}>{i.text}</span>
+                        </div>
+                      ))}
+                      {record.items.filter(i=>i.completed).length === 0 && (
+                        <div style={{ fontSize:13, color:css.textMuted, textAlign:"center", padding:"8px 0" }}>Nothing completed that day</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Daily Activity Insights */}
+          {dailyHistory.length > 0 && (() => {
+            const now = new Date();
+            const weekStart = new Date(now); weekStart.setDate(now.getDate()-6);
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const inWeek  = dailyHistory.filter(h => h.date >= weekStart.toISOString().slice(0,10));
+            const inMonth = dailyHistory.filter(h => h.date >= monthStart.toISOString().slice(0,10));
+            const avgRate = dailyHistory.length ? Math.round(dailyHistory.reduce((s,h) => s+h.completionRate,0)/dailyHistory.length) : 0;
+            const weekDone = inWeek.reduce((s,h) => s+h.completedCount, 0);
+            const monthDone = inMonth.reduce((s,h) => s+h.completedCount, 0);
+            // streak
+            let streak = 0, d2 = new Date(now);
+            d2.setDate(d2.getDate()-1);
+            while(true){const k=d2.toISOString().slice(0,10);if(!dailyHistory.find(h=>h.date===k))break;streak++;d2.setDate(d2.getDate()-1);}
+            const lavText  = dark ? "#fbb6ce" : "#be185d";
+            return (
+              <div className="lf-card" style={{ background: dark?"#2d0a1e":"#fff5f8", border:`1px solid ${dark?"#9d174d":"#fbcfe8"}` }}>
+                <SectionHeader title="Daily Activity Insights" icon="📊" action="View Calendar" onAction={() => setTab("calendar")} css={css} />
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12 }}>
+                  {[
+                    { label:"Days archived", val:dailyHistory.length, icon:"📅", color:"#db2777" },
+                    { label:"Avg completion", val:`${avgRate}%`, icon:"📈", color:"#ec4899" },
+                    { label:"Prod. streak", val:`${streak}d`, icon:"🔥", color:"#f59e0b" },
+                    { label:"Done this week", val:weekDone, icon:"⚡", color:"#10b981" },
+                    { label:"Done this month", val:monthDone, icon:"🗓", color:"#3b82f6" },
+                  ].map(s => (
+                    <div key={s.label} style={{ textAlign:"center", background:dark?"#2d0a1e":"#fff", borderRadius:12, padding:"14px 8px", border:`1px solid ${dark?"#4a1c2e":"#fce7f3"}` }}>
+                      <div style={{ fontSize:20 }}>{s.icon}</div>
+                      <div style={{ fontSize:22, fontWeight:700, color:s.color, marginTop:4 }}>{s.val}</div>
+                      <div style={{ fontSize:10, color:css.textMuted, marginTop:2, lineHeight:1.3 }}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      );
+    }
+
+    function WeekDayView({ events, view, css, dark, onEdit }) {
+      const now = new Date();
+      const days = view === "day" ? [now] : Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now); d.setDate(now.getDate() - now.getDay() + i); return d;
+      });
+      return (
+        <div style={{ overflowX: "auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${days.length}, minmax(100px, 1fr))`, gap: 1 }}>
+            {days.map(d => {
+              const k = d.toISOString().slice(0,10);
+              const isToday = k === today();
+              const dayEvents = events.filter(e => e.date === k);
+              return (
+                <div key={k} style={{ borderLeft: `1px solid ${css.border}`, padding: "8px 8px" }}>
+                  <div style={{ textAlign: "center", marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, color: css.textMuted }}>{DAYS_SHORT[d.getDay()]}</div>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: isToday ? "#db2777" : "transparent", color: isToday ? "#fff" : css.text, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: isToday ? 600 : 400, margin: "4px auto 0" }}>{d.getDate()}</div>
+                  </div>
+                  {dayEvents.map(e => (
+                    <div key={e.id} style={{ background: dark ? "#831843" : "#fce7f3", color: "#be185d", borderRadius: 6, padding: "4px 8px", fontSize: 11, marginBottom: 4, cursor: "pointer" }} onClick={() => onEdit(e)}>
+                      <div style={{ fontWeight: 600 }}>{e.time}</div>
+                      <div>{e.title}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function Calendar({ events, setEvents, dailyHistory, css, dark }) {
+      const now = new Date();
+      const [year, setYear] = useState(now.getFullYear());
+      const [month, setMonth] = useState(now.getMonth());
+      const [view, setView] = useState("month");
+      const [modal, setModal] = useState(null);
+      const [form, setForm] = useState({ title: "", desc: "", date: today(), time: "09:00", status: "Confirmed" });
+      const [historyModal, setHistoryModal] = useState(null); // date string
+
+      const days = daysInMonth(year, month);
+      const firstDay = firstDayOfMonth(year, month);
+
+      const eventsForDay = (d) => {
+        const k = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        return events.filter(e => e.date === k);
+      };
+      const historyForDay = (d) => {
+        const k = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        return dailyHistory.find(h => h.date === k) || null;
+      };
+
+      const saveEvent = () => {
+        if (!form.title.trim()) return;
+        if (modal === "edit") {
+          setEvents(events.map(e => e.id === form.id ? { ...form } : e));
+        } else {
+          setEvents([...events, { ...form, id: uid() }]);
+        }
+        setModal(null);
+        setForm({ title: "", desc: "", date: today(), time: "09:00", status: "Confirmed" });
+      };
+
+      const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y-1); } else setMonth(m => m-1); };
+      const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y+1); } else setMonth(m => m+1); };
+
+      const lavSoft   = dark ? "#2d0a1e" : "#fff5f8";
+      const lavBorder = dark ? "#9d174d" : "#fbcfe8";
+      const lavText   = dark ? "#fbb6ce" : "#be185d";
+      const pinkCol   = "#ec4899";
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Calendar</h2>
+              {dailyHistory.length > 0 && (
+                <p style={{ fontSize: 12, color: lavText, marginTop: 3 }}>
+                  💜 Dates with a purple dot have a daily history log — click to view.
+                </p>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {["month","week","day"].map(v => (
+                <button key={v} className={`lf-btn ${view === v ? "lf-btn-primary" : "lf-btn-ghost"}`} onClick={() => setView(v)} style={{ padding: "6px 14px", textTransform: "capitalize" }}>{v}</button>
+              ))}
+              <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", desc:"", date:today(), time:"09:00", status:"Confirmed" }); setModal("add"); }}>+ Add event</button>
+            </div>
+          </div>
+
+          {view === "month" && (
+            <div className="lf-card" style={{ padding: 0, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${css.border}` }}>
+                <button className="lf-btn lf-btn-ghost" onClick={prevMonth} style={{ padding: "6px 12px" }}>←</button>
+                <span style={{ fontWeight: 600, fontSize: 16, color: css.text }}>{MONTHS[month]} {year}</span>
+                <button className="lf-btn lf-btn-ghost" onClick={nextMonth} style={{ padding: "6px 12px" }}>→</button>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "8px 8px 0" }}>
+                {DAYS_SHORT.map(d => <div key={d} style={{ textAlign: "center", padding: "8px 0", fontSize: 12, fontWeight: 600, color: css.textMuted }}>{d}</div>)}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "0 8px 8px", gap: 2 }}>
+                {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: days }).map((_, i) => {
+                  const d = i + 1;
+                  const isToday = d === now.getDate() && month === now.getMonth() && year === now.getFullYear();
+                  const evs = eventsForDay(d);
+                  const hist = historyForDay(d);
+                  const dateKey = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+                  return (
+                    <div key={d} style={{ minHeight: 72, padding: "4px 2px", borderRadius: 8, background: hist ? (dark?"#1e1b30":"#fff5f8") : "transparent", cursor: hist ? "pointer" : "default" }}
+                      onClick={() => hist && setHistoryModal(dateKey)}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2, paddingRight:2 }}>
+                        <div className={`cal-day${isToday ? " today" : ""}`} style={{ width: 32, height: 32 }}>{d}</div>
+                        {hist && (
+                          <div title={`${hist.completionRate}% completed`} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:1 }}>
+                            <div style={{ width:7, height:7, borderRadius:"50%", background: hist.completionRate===100 ? "#10b981" : lavText }} />
+                            <div style={{ fontSize:8, color:lavText, fontWeight:700 }}>{hist.completionRate}%</div>
+                          </div>
+                        )}
+                      </div>
+                      {evs.slice(0, 2).map(e => (
+                        <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: dark ? "#831843" : "#fce7f3", color: "#db2777", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" }}
+                          onClick={(ev) => { ev.stopPropagation(); setForm({...e}); setModal("edit"); }}>{e.title}</div>
+                      ))}
+                      {evs.length > 2 && <div style={{ fontSize: 10, color: css.textMuted, paddingLeft: 6 }}>+{evs.length-2}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(view === "week" || view === "day") && (
+            <div className="lf-card">
+              <WeekDayView events={events} view={view} css={css} dark={dark} onEdit={(e) => { setForm({...e}); setModal("edit"); }} />
+            </div>
+          )}
+
+          {/* Daily History log list */}
+          {dailyHistory.length > 0 && (
+            <div className="lf-card" style={{ background: lavSoft, border: `1px solid ${lavBorder}` }}>
+              <SectionHeader title="Daily History Archive" icon="📖" css={css} />
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {[...dailyHistory].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10).map(h => (
+                  <div key={h.date} onClick={() => setHistoryModal(h.date)}
+                    style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", background:dark?"#2d0a1e":"#fff", borderRadius:12, cursor:"pointer", border:`1px solid ${dark?"#4a1c2e":"#fce7f3"}` }}>
+                    <div style={{ width:42, height:42, borderRadius:12, background: h.completionRate===100?"#d1fae5":(dark?"#3d0a1e":"#fce7f3"), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color: h.completionRate===100?"#059669":lavText }}>{h.completionRate}%</div>
+                      <div style={{ fontSize:9, color:css.textMuted }}>{h.completedCount}/{h.totalCount}</div>
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:600, color:css.text, fontSize:14 }}>{fmtFull(h.date)}</div>
+                      <div style={{ fontSize:12, color:css.textMuted, marginTop:2 }}>
+                        {h.items.filter(i=>i.completed).slice(0,2).map(i=>i.text).join(" · ") || "No items completed"}
+                        {h.items.filter(i=>i.completed).length > 2 && ` +${h.items.filter(i=>i.completed).length-2} more`}
+                      </div>
+                    </div>
+                    <div style={{ fontSize:18 }}>{h.completionRate===100?"🌟":h.completionRate>=50?"✨":"💙"}</div>
+                  </div>
+                ))}
+                {dailyHistory.length > 10 && <div style={{ textAlign:"center", fontSize:12, color:css.textMuted, paddingTop:4 }}>+{dailyHistory.length-10} more archived days</div>}
+              </div>
+            </div>
+          )}
+
+          <div className="lf-card">
+            <SectionHeader title="All events" icon="📋" css={css} />
+            {events.length === 0 && <EmptyState msg="No events yet" icon="📭" css={css} />}
+            {[...events].sort((a,b) => a.date > b.date ? 1 : -1).map(e => (
+              <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${css.border}` }}>
+                <div style={{ background: dark ? "#831843" : "#fff0f6", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
+                  <div>{fmt(e.date)}</div><div>{e.time}</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 500, color: css.text }}>{e.title}</div>
+                  {e.desc && <div style={{ fontSize: 12, color: css.textMuted }}>{e.desc}</div>}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="lf-btn lf-btn-ghost" style={{ padding: "4px 10px", fontSize: 12 }} onClick={() => { setForm({...e}); setModal("edit"); }}>Edit</button>
+                  <button style={{ padding: "4px 10px", fontSize: 12, background: dark ? "#2d1b1b" : "#fee2e2", color: "#ef4444", borderRadius: 8, border: "none", cursor: "pointer" }} onClick={() => setEvents(events.filter(x => x.id !== e.id))}>✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Event add/edit modal */}
+          {modal && (
+            <div className="modal-overlay" onClick={() => setModal(null)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 16 }}>{modal === "edit" ? "Edit event" : "New event"}</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <input className="lf-input" placeholder="Event title" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
+                  <textarea className="lf-input" placeholder="Description (optional)" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} rows={2} style={{ resize: "vertical" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <input className="lf-input" type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+                    <input className="lf-input" type="time" value={form.time} onChange={e => setForm({...form, time: e.target.value})} />
+                  </div>
+                  <select className="lf-input" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
+                    {["Confirmed","Tentative","Cancelled"].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+                    <button className="lf-btn lf-btn-ghost" onClick={() => setModal(null)}>Cancel</button>
+                    <button className="lf-btn lf-btn-primary" onClick={saveEvent}>Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* History detail modal */}
+          {historyModal && (() => {
+            const record = dailyHistory.find(h => h.date === historyModal);
+            if (!record) return null;
+            const doneItems = record.items.filter(i=>i.completed);
+            const pendItems = record.items.filter(i=>!i.completed);
+            return (
+              <div className="modal-overlay" onClick={() => setHistoryModal(null)}>
+                <div className="modal" onClick={e => e.stopPropagation()} style={{ background: dark?"#2d0a1e":"#fff", maxWidth:520 }}>
+                  {/* Header */}
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+                    <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#f9a8d4,#ec4899)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>📖</div>
+                    <div>
+                      <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, fontWeight:400, color:css.text }}>{fmtFull(record.date)}</div>
+                      <div style={{ fontSize:12, color:lavText, marginTop:2 }}>Daily History Log</div>
+                    </div>
+                    <button onClick={() => setHistoryModal(null)} style={{ marginLeft:"auto", background:"transparent", border:"none", fontSize:20, color:css.textMuted, cursor:"pointer", lineHeight:1 }}>✕</button>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+                    {[
+                      { l:"Completion", v:`${record.completionRate}%`, c: record.completionRate===100?"#10b981":lavText },
+                      { l:"Done", v:record.completedCount, c:"#ec4899" },
+                      { l:"Total", v:record.totalCount, c:css.textMuted },
+                    ].map(s => (
+                      <div key={s.l} style={{ flex:1, textAlign:"center", background:dark?"#3d0a1e":"#fff5f8", borderRadius:12, padding:"10px 6px", border:`1px solid ${lavBorder}` }}>
+                        <div style={{ fontSize:20, fontWeight:700, color:s.c }}>{s.v}</div>
+                        <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ marginBottom:20 }}>
+                    <div style={{ height:8, borderRadius:4, background:dark?"#4a1c2e":"#fce7f3", overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:4, background:"linear-gradient(90deg,#ec4899,#ec4899)", width:`${record.completionRate}%` }} />
+                    </div>
+                  </div>
+
+                  {/* Today's Log */}
+                  <div style={{ fontSize:11, fontWeight:700, color:css.textMuted, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:10 }}>Today's Log</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:0, maxHeight:320, overflowY:"auto" }}>
+                    {doneItems.map(item => (
+                      <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderBottom:`1px solid ${css.border}`, background:dark?"#2d0a1e":"#fdf2f8", borderRadius:8, marginBottom:3 }}>
+                        <div style={{ width:20, height:20, borderRadius:"50%", background:"#ec4899", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <span style={{ color:"#fff", fontSize:11, lineHeight:1 }}>✓</span>
+                        </div>
+                        <span style={{ fontSize:14, color:css.text, flex:1 }}>{item.text}</span>
+                      </div>
+                    ))}
+                    {pendItems.map(item => (
+                      <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderBottom:`1px solid ${css.border}`, opacity:0.55, marginBottom:3 }}>
+                        <div style={{ width:20, height:20, borderRadius:"50%", border:`2px solid ${css.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <span style={{ fontSize:10 }}>☐</span>
+                        </div>
+                        <span style={{ fontSize:14, color:css.text, flex:1, textDecoration:"line-through" }}>{item.text}</span>
+                      </div>
+                    ))}
+                    {record.items.length === 0 && <EmptyState msg="No items were logged this day." icon="📭" css={css} />}
+                  </div>
+
+                  <div style={{ marginTop:20, textAlign:"right" }}>
+                    <button className="lf-btn lf-btn-ghost" onClick={() => setHistoryModal(null)}>Close</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      );
+    }
+
+    function Tasks({ tasks, setTasks, css, dark }) {
+      const [modal, setModal] = useState(false);
+      const [filter, setFilter] = useState("All");
+      const [sort, setSort] = useState("due");
+      const [form, setForm] = useState({ title:"", desc:"", due:today(), priority:"Medium", category:"Personal", status:"To Do" });
+      const [editId, setEditId] = useState(null);
+
+      const completed = tasks.filter(t => t.status === "Completed").length;
+      const inProg = tasks.filter(t => t.status === "In Progress").length;
+      const pct = tasks.length ? Math.round(completed/tasks.length*100) : 0;
+
+      const filtered = tasks
+        .filter(t => filter === "All" ? true : t.status === filter)
+        .sort((a,b) => sort === "due" ? a.due.localeCompare(b.due) : sort === "priority" ? ["High","Medium","Low"].indexOf(a.priority) - ["High","Medium","Low"].indexOf(b.priority) : a.title.localeCompare(b.title));
+
+      const save = () => {
+        if (!form.title.trim()) return;
+        if (editId) { setTasks(tasks.map(t => t.id === editId ? { ...form, id: editId } : t)); setEditId(null); }
+        else { setTasks([...tasks, { ...form, id: uid() }]); }
+        setModal(false);
+        setForm({ title:"", desc:"", due:today(), priority:"Medium", category:"Personal", status:"To Do" });
+      };
+
+      const cycle = (t) => {
+        const next = { "To Do":"In Progress", "In Progress":"Completed", "Completed":"To Do" };
+        setTasks(tasks.map(x => x.id === t.id ? { ...x, status: next[x.status] } : x));
+      };
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Tasks</h2>
+            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", desc:"", due:today(), priority:"Medium", category:"Personal", status:"To Do" }); setEditId(null); setModal(true); }}>+ New task</button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+            {[
+              { label: "Total", val: tasks.length, color: "#db2777" },
+              { label: "Completed", val: completed, color: "#10b981" },
+              { label: "In progress", val: inProg, color: "#f59e0b" },
+              { label: "Completion rate", val: `${pct}%`, color: "#3b82f6" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign: "center", padding: 16 }}>
+                <div style={{ fontSize: 24, fontWeight: 600, color: s.color }}>{s.val}</div>
+                <div style={{ fontSize: 12, color: css.textMuted, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="lf-card">
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: css.text }}>Overall completion</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#db2777" }}>{pct}%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #db2777, #ec4899)" }} />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {["All", ...STATUSES].map(s => (
+              <button key={s} className={`lf-btn ${filter === s ? "lf-btn-primary" : "lf-btn-ghost"}`} style={{ padding: "6px 14px" }} onClick={() => setFilter(s)}>{s}</button>
+            ))}
+            <select className="lf-input" value={sort} onChange={e => setSort(e.target.value)} style={{ width: "auto", padding: "7px 12px" }}>
+              <option value="due">Sort: Due date</option>
+              <option value="priority">Sort: Priority</option>
+              <option value="title">Sort: Title</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {filtered.length === 0 && <EmptyState msg="No tasks found" icon="🎉" css={css} />}
+            {filtered.map(t => (
+              <div key={t.id} className="lf-card" style={{ padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <button onClick={() => cycle(t)} style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${t.status==="Completed" ? "#10b981" : css.border}`, background: t.status==="Completed" ? "#10b981" : "transparent", color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, cursor: "pointer" }}>
+                  {t.status === "Completed" ? "✓" : t.status === "In Progress" ? "●" : ""}
+                </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 500, color: css.text, textDecoration: t.status==="Completed" ? "line-through" : "none", opacity: t.status==="Completed" ? 0.6 : 1 }}>{t.title}</span>
+                    <PriorityBadge p={t.priority} />
+                    <StatusBadge status={t.status} />
+                  </div>
+                  {t.desc && <div style={{ fontSize: 12, color: css.textMuted, marginTop: 2 }}>{t.desc}</div>}
+                  <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                    <span style={{ fontSize: 11, color: css.textMuted }}>📅 {fmt(t.due)}</span>
+                    <span style={{ fontSize: 11, color: css.textMuted }}>🏷 {t.category}</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  <button className="lf-btn lf-btn-ghost" style={{ padding: "4px 8px", fontSize: 12 }} onClick={() => { setForm({...t}); setEditId(t.id); setModal(true); }}>✏️</button>
+                  <button style={{ padding: "4px 8px", fontSize: 12, background: dark?"#2d1b1b":"#fee2e2", color:"#ef4444", borderRadius: 8, border: "none", cursor: "pointer" }} onClick={() => setTasks(tasks.filter(x => x.id !== t.id))}>✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {modal && (
+            <div className="modal-overlay" onClick={() => setModal(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 16 }}>{editId ? "Edit task" : "New task"}</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <input className="lf-input" placeholder="Task title *" value={form.title} onChange={e => setForm({...form,title:e.target.value})} />
+                  <textarea className="lf-input" placeholder="Description (optional)" value={form.desc} onChange={e => setForm({...form,desc:e.target.value})} rows={2} style={{ resize: "vertical" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div><label style={{ fontSize: 12, color: css.textMuted, display:"block", marginBottom:4 }}>Due date</label>
+                      <input className="lf-input" type="date" value={form.due} onChange={e => setForm({...form,due:e.target.value})} /></div>
+                    <div><label style={{ fontSize: 12, color: css.textMuted, display:"block", marginBottom:4 }}>Priority</label>
+                      <select className="lf-input" value={form.priority} onChange={e => setForm({...form,priority:e.target.value})}>{PRIORITIES.map(p=><option key={p}>{p}</option>)}</select></div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div><label style={{ fontSize: 12, color: css.textMuted, display:"block", marginBottom:4 }}>Category</label>
+                      <select className="lf-input" value={form.category} onChange={e => setForm({...form,category:e.target.value})}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
+                    <div><label style={{ fontSize: 12, color: css.textMuted, display:"block", marginBottom:4 }}>Status</label>
+                      <select className="lf-input" value={form.status} onChange={e => setForm({...form,status:e.target.value})}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+                  </div>
+                  <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+                    <button className="lf-btn lf-btn-ghost" onClick={() => setModal(false)}>Cancel</button>
+                    <button className="lf-btn lf-btn-primary" onClick={save}>Save task</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function Habits({ habits, setHabits, css, dark }) {
+      const [modal, setModal] = useState(false);
+      const [form, setForm] = useState({ name:"", emoji:"🌟", color:"#db2777" });
+      const [editId, setEditId] = useState(null);
+      const todayStr = today();
+
+      const getStreak = (habit) => {
+        let streak = 0, d = new Date();
+        while (true) {
+          const k = d.toISOString().slice(0,10);
+          if (!habit.completions[k]) break;
+          streak++; d.setDate(d.getDate()-1);
+        }
+        return streak;
+      };
+
+      const toggle = (hid) => {
+        setHabits(habits.map(h => {
+          if (h.id !== hid) return h;
+          const c = { ...h.completions };
+          if (c[todayStr]) delete c[todayStr]; else c[todayStr] = true;
+          return { ...h, completions: c };
+        }));
+      };
+
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - 6 + i);
+        return d.toISOString().slice(0,10);
+      });
+
+      const save = () => {
+        if (!form.name.trim()) return;
+        if (editId) { setHabits(habits.map(h => h.id === editId ? { ...h, ...form } : h)); }
+        else { setHabits([...habits, { ...form, id: uid(), completions: {} }]); }
+        setModal(false); setEditId(null);
+        setForm({ name:"", emoji:"🌟", color:"#db2777" });
+      };
+
+      const EMOJIS = ["🌟","🏃","💧","📚","🧘","🥗","💊","💪","🎵","🌿","☀️","🛌","✍️","🧠","❤️","🏋️"];
+      const COLORS = ["#db2777","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16"];
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Habit Tracker</h2>
+            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ name:"", emoji:"🌟", color:"#db2777" }); setEditId(null); setModal(true); }}>+ New habit</button>
+          </div>
+
+          <div className="lf-card" style={{ overflowX: "auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: `180px repeat(7, 1fr)`, gap: 4, minWidth: 480 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: css.textMuted, padding: "4px 0" }}>Habit</div>
+              {last7Days.map(d => (
+                <div key={d} style={{ textAlign: "center", fontSize: 11, color: d === todayStr ? "#db2777" : css.textMuted, fontWeight: d === todayStr ? 700 : 400, padding: "4px 0" }}>
+                  {new Date(d+"T00:00").toLocaleDateString("en-US",{weekday:"short"})}<br/>{new Date(d+"T00:00").getDate()}
+                </div>
+              ))}
+              {habits.map(h => (
+                <React.Fragment key={h.id}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+                    <span style={{ fontSize: 18 }}>{h.emoji}</span>
+                    <span style={{ fontSize: 13, color: css.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</span>
+                  </div>
+                  {last7Days.map(d => (
+                    <div key={`${h.id}${d}`} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 6, background: h.completions[d] ? h.color : "transparent", border: `2px solid ${h.color}`, opacity: h.completions[d] ? 1 : 0.35, cursor: d === todayStr ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#fff" }}
+                        onClick={() => d === todayStr && toggle(h.id)}>
+                        {h.completions[d] ? "✓" : ""}
+                      </div>
+                    </div>
+                  ))}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            {habits.map(h => {
+              const streak = getStreak(h);
+              const total = Object.keys(h.completions).length;
+              const last30 = Array.from({length:30},(_, i) => { const d=new Date(); d.setDate(d.getDate()-29+i); return d.toISOString().slice(0,10); });
+              const rate = Math.round(last30.filter(d => h.completions[d]).length / 30 * 100);
+              const done = h.completions[todayStr];
+              return (
+                <div key={h.id} className="lf-card" style={{ borderLeft: `4px solid ${h.color}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    <span style={{ fontSize: 24 }}>{h.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500, color: css.text, fontSize: 15 }}>{h.name}</div>
+                      <div style={{ fontSize: 12, color: css.textMuted }}>{rate}% last 30 days</div>
+                    </div>
+                    <button onClick={() => toggle(h.id)} style={{ width: 36, height: 36, borderRadius: "50%", background: done ? h.color : "transparent", border: `2px solid ${h.color}`, color: done ? "#fff" : h.color, fontSize: 16, display:"flex", alignItems:"center", justifyContent:"center", cursor: "pointer" }}>
+                      {done ? "✓" : "○"}
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {streak > 0 && <span className="streak-badge">🔥 {streak}d streak</span>}
+                    <span style={{ background: dark?"#1e293b":"#f8fafc", color:css.textMuted, borderRadius:20, padding:"4px 10px", fontSize:12 }}>✅ {total} total</span>
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${rate}%`, background: h.color }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                    <button className="lf-btn lf-btn-ghost" style={{ padding: "4px 10px", fontSize: 12 }} onClick={() => { setForm({name:h.name,emoji:h.emoji,color:h.color}); setEditId(h.id); setModal(true); }}>Edit</button>
+                    <button style={{ padding:"4px 10px", fontSize:12, background:dark?"#2d1b1b":"#fee2e2", color:"#ef4444", borderRadius:8, border:"none", cursor:"pointer" }} onClick={() => setHabits(habits.filter(x => x.id!==h.id))}>Delete</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {modal && (
+            <div className="modal-overlay" onClick={() => setModal(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 16 }}>{editId ? "Edit habit" : "New habit"}</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <input className="lf-input" placeholder="Habit name *" value={form.name} onChange={e => setForm({...form,name:e.target.value})} />
+                  <div>
+                    <label style={{ fontSize: 12, color: css.textMuted, display: "block", marginBottom: 6 }}>Choose emoji</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {EMOJIS.map(em => (
+                        <button key={em} onClick={() => setForm({...form,emoji:em})} style={{ width:36, height:36, borderRadius:8, border:`2px solid ${form.emoji===em?"#db2777":css.border}`, background:"transparent", fontSize:18, cursor:"pointer" }}>{em}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: css.textMuted, display: "block", marginBottom: 6 }}>Choose color</label>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {COLORS.map(c => (
+                        <div key={c} onClick={() => setForm({...form,color:c})} style={{ width:28, height:28, borderRadius:"50%", background:c, cursor:"pointer", border:`3px solid ${form.color===c?"#fff":"transparent"}`, outline:`2px solid ${form.color===c?c:"transparent"}` }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+                    <button className="lf-btn lf-btn-ghost" onClick={() => setModal(false)}>Cancel</button>
+                    <button className="lf-btn lf-btn-primary" onClick={save}>Save habit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function MoodTracker({ moods, setMoods, css, dark }) {
+      const [sel, setSel] = useState(null);
+      const [note, setNote] = useState("");
+      const [saved, setSaved] = useState(false);
+      const todayStr = today();
+      const todayMood = moods.find(m => m.date === todayStr);
+
+      const saveMood = () => {
+        if (!sel) return;
+        setMoods([...moods.filter(m => m.date !== todayStr), { date: todayStr, value: sel, note }]);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      };
+
+      const last14 = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - 13 + i);
+        return d.toISOString().slice(0,10);
+      });
+
+      const avg = moods.length ? (moods.reduce((s,m) => s+m.value, 0) / moods.length).toFixed(1) : "—";
+      const recent = [...moods].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10);
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Mood Tracker</h2>
+
+          <div className="lf-card">
+            <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 4 }}>How are you feeling today?</h3>
+            <p style={{ fontSize: 13, color: css.textMuted, marginBottom: 16 }}>{fmtFull(todayStr)}</p>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+              {MOODS.map(m => (
+                <button key={m.value} onClick={() => setSel(m.value)} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6, padding:"12px 16px", borderRadius:14, border:`2px solid ${sel===m.value||todayMood?.value===m.value ? m.color:"transparent"}`, background: sel===m.value||todayMood?.value===m.value ? (dark?"#1c1c2e":m.color+"20") : "transparent", cursor:"pointer" }}>
+                  <span style={{ fontSize: 32 }}>{m.icon}</span>
+                  <span style={{ fontSize: 11, color: css.textMuted }}>{m.label}</span>
+                </button>
+              ))}
+            </div>
+            <textarea className="lf-input" placeholder="Add a note about your day (optional)..." rows={2} style={{ resize: "vertical" }}
+              value={note || todayMood?.note || ""} onChange={e => setNote(e.target.value)} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+              <button className="lf-btn lf-btn-primary" onClick={saveMood}>{todayMood ? "Update mood" : "Log mood"}</button>
+              {saved && <span style={{ fontSize: 13, color: "#10b981" }}>✓ Saved!</span>}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px,1fr))", gap: 12 }}>
+            {[
+              { label: "Days tracked", val: moods.length, color: "#db2777" },
+              { label: "Avg mood (1-5)", val: avg, color: "#f59e0b" },
+              { label: "Today's mood", val: todayMood ? MOODS.find(m=>m.value===todayMood.value)?.icon : "—", color: "#10b981" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign:"center", padding:16 }}>
+                <div style={{ fontSize: 24, fontWeight: 600, color: s.color }}>{s.val}</div>
+                <div style={{ fontSize: 12, color: css.textMuted, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="lf-card">
+            <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 16, fontSize: 15 }}>Last 14 days</h3>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80 }}>
+              {last14.map(d => {
+                const m = moods.find(x => x.date === d);
+                const h = m ? (m.value / 5) * 72 : 0;
+                const moodData = m ? MOODS.find(x => x.value === m.value) : null;
+                return (
+                  <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div style={{ width: "100%", height: h, background: moodData?.color || "transparent", borderRadius: "4px 4px 0 0", minHeight: m?4:0, opacity: 0.85 }} />
+                    <div style={{ fontSize: 9, color: css.textMuted, marginTop: 4 }}>{new Date(d+"T00:00").getDate()}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+              {MOODS.map(m => (
+                <div key={m.value} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: css.textMuted }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: m.color }} />{m.label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lf-card">
+            <h3 style={{ fontWeight: 600, color: css.text, marginBottom: 12, fontSize: 15 }}>Mood history</h3>
+            {recent.length === 0 && <EmptyState msg="No mood entries yet" icon="💭" css={css} />}
+            {recent.map(m => {
+              const moodData = MOODS.find(x => x.value === m.value);
+              return (
+                <div key={m.date} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${css.border}` }}>
+                  <span style={{ fontSize: 24 }}>{moodData?.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontWeight: 500, color: css.text, fontSize: 14 }}>{moodData?.label}</span>
+                      <span style={{ fontSize: 11, color: css.textMuted }}>{fmt(m.date)}</span>
+                    </div>
+                    {m.note && <div style={{ fontSize: 12, color: css.textMuted }}>{m.note}</div>}
+                  </div>
+                  <button style={{ fontSize:11, color:"#ef4444", background:"transparent", border:"none", cursor:"pointer" }} onClick={() => setMoods(moods.filter(x => x.date !== m.date))}>✕</button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function Journal({ journals, setJournals, css, dark }) {
+      const [view, setView] = useState("list");
+      const [form, setForm] = useState({ title:"", content:"", date:today(), prompt:"" });
+      const [editId, setEditId] = useState(null);
+      const [search, setSearch] = useState("");
+      const prompt = PROMPTS[new Date().getDay() % PROMPTS.length];
+
+      const save = () => {
+        if (!form.content.trim()) return;
+        if (editId) { setJournals(journals.map(j => j.id === editId ? { ...form, id: editId } : j)); }
+        else { setJournals([{ ...form, id: uid() }, ...journals]); }
+        setView("list"); setEditId(null);
+        setForm({ title:"", content:"", date:today(), prompt:"" });
+      };
+
+      const filtered = journals.filter(j =>
+        (j.title + j.content + j.prompt).toLowerCase().includes(search.toLowerCase())
+      ).sort((a,b) => b.date.localeCompare(a.date));
+
+      const exportJournals = () => {
+        const txt = journals.map(j => `=== ${fmtFull(j.date)} ===\n${j.title ? j.title+"\n" : ""}${j.prompt ? "Prompt: "+j.prompt+"\n" : ""}\n${j.content}\n`).join("\n---\n\n");
+        const a = document.createElement("a"); a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(txt); a.download = "journal-export.txt"; a.click();
+      };
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Journal</h2>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="lf-btn lf-btn-ghost" onClick={exportJournals} style={{ fontSize: 13 }}>⬇ Export</button>
+              <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", content:"", date:today(), prompt }); setEditId(null); setView("write"); }}>+ New entry</button>
+            </div>
+          </div>
+
+          {view === "write" && (
+            <div className="lf-card">
+              {form.prompt && (
+                <div style={{ background: dark?"#2d0a1e":"#fff0f6", border:`1px solid ${dark?"#831843":"#fbcfe8"}`, borderRadius:12, padding:"12px 16px", marginBottom:16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 4 }}>✨ Today's prompt</div>
+                  <div style={{ fontSize: 14, color: dark?"#fbb6ce":"#9d174d", fontStyle:"italic" }}>{form.prompt}</div>
+                </div>
+              )}
+              <input className="lf-input" placeholder="Entry title (optional)" value={form.title} onChange={e => setForm({...form,title:e.target.value})} style={{ marginBottom: 12, fontSize: 16 }} />
+              <textarea className="lf-input" placeholder="Write your thoughts here..." value={form.content} onChange={e => setForm({...form,content:e.target.value})} rows={12} style={{ resize: "vertical", lineHeight: 1.7 }} />
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 14 }}>
+                <button className="lf-btn lf-btn-ghost" onClick={() => setView("list")}>Cancel</button>
+                <button className="lf-btn lf-btn-primary" onClick={save}>Save entry</button>
+              </div>
+            </div>
+          )}
+
+          {view === "list" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ background: dark?"#2d0a1e":"#fff0f6", border:`1px solid ${dark?"#831843":"#fbcfe8"}`, borderRadius:14, padding:"16px 20px" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 6 }}>✨ Today's reflection prompt</div>
+                <div style={{ fontSize: 15, color: dark?"#fbb6ce":"#9d174d", fontStyle:"italic", marginBottom: 12 }}>"{prompt}"</div>
+                <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", content:"", date:today(), prompt }); setEditId(null); setView("write"); }} style={{ fontSize: 13 }}>Start writing</button>
+              </div>
+              <input className="lf-input" placeholder="🔍 Search entries..." value={search} onChange={e => setSearch(e.target.value)} />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
+                {filtered.length === 0 && <div style={{ gridColumn:"1/-1" }}><EmptyState msg={search ? "No entries found" : "Start writing your first entry"} icon="✍️" css={css} /></div>}
+                {filtered.map(j => (
+                  <div key={j.id} className="lf-card" style={{ cursor:"pointer" }} onClick={() => { setForm({...j}); setEditId(j.id); setView("write"); }}>
+                    <div style={{ fontSize: 11, color: "#db2777", fontWeight: 600, marginBottom: 4 }}>📅 {fmtFull(j.date)}</div>
+                    {j.title && <div style={{ fontWeight: 600, color: css.text, marginBottom: 6 }}>{j.title}</div>}
+                    {j.prompt && <div style={{ fontSize: 11, fontStyle:"italic", color: css.textMuted, marginBottom: 6 }}>{j.prompt}</div>}
+                    <div style={{ fontSize: 13, color: css.textMuted, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", lineHeight:1.6 }}>{j.content}</div>
+                    <div style={{ display:"flex", justifyContent:"flex-end", marginTop:12 }}>
+                      <button onClick={e => { e.stopPropagation(); setJournals(journals.filter(x=>x.id!==j.id)); }} style={{ fontSize:11, color:"#ef4444", background:"transparent", border:"none", cursor:"pointer" }}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── To Do List Page ──────────────────────────────────────────────────────
+    function TodoListPage({ todoItems, setTodoItems, projects, setProjects, css, dark }) {
+      const [input, setInput] = useState("");
+      const [editId, setEditId] = useState(null);
+      const [editText, setEditText] = useState("");
+      const [selectedProject, setSelectedProject] = useState("inbox");
+      const [newProjectName, setNewProjectName] = useState("");
+
+      const inScope = (i) => selectedProject === "inbox" ? !i.projectId : i.projectId === selectedProject;
+      const scoped  = todoItems.filter(inScope);
+
+      const done      = scoped.filter(i => i.completed).length;
+      const total     = scoped.length;
+      const remaining = total - done;
+      const pct       = total ? Math.round(done / total * 100) : 0;
+
+      const sorted = [...scoped].sort((a, b) => {
+        if (a.completed === b.completed) return new Date(b.createdAt) - new Date(a.createdAt);
+        return a.completed - b.completed;
+      });
+
+      const addItem = () => {
+        const t = input.trim();
+        if (!t) return;
+        setTodoItems([...todoItems, { id: uid(), text: t, completed: false, createdAt: new Date().toISOString(), projectId: selectedProject === "inbox" ? null : selectedProject }]);
+        setInput("");
+      };
+      const toggle    = (id) => setTodoItems(todoItems.map(i => i.id === id ? { ...i, completed: !i.completed } : i));
+      const del       = (id) => setTodoItems(todoItems.filter(i => i.id !== id));
+      const saveEdit  = (id) => {
+        if (!editText.trim()) return;
+        setTodoItems(todoItems.map(i => i.id === id ? { ...i, text: editText.trim() } : i));
+        setEditId(null); setEditText("");
+      };
+      const clearDone = () => setTodoItems(todoItems.filter(i => !(i.completed && inScope(i))));
+
+      const addProject = () => {
+        const name = newProjectName.trim();
+        if (!name) return;
+        const proj = { id: uid(), name, emoji: "📁", createdAt: new Date().toISOString() };
+        setProjects([...projects, proj]);
+        setNewProjectName("");
+        setSelectedProject(proj.id);
+      };
+      const deleteProject = (id) => {
+        setProjects(projects.filter(p => p.id !== id));
+        setTodoItems(todoItems.map(i => i.projectId === id ? { ...i, projectId: null } : i));
+        if (selectedProject === id) setSelectedProject("inbox");
+      };
+
+      const activeProject = projects.find(p => p.id === selectedProject);
+
+      const blue      = "#3b82f6";
+      const blueSoft  = dark ? "#0c1a35" : "#eff6ff";
+      const blueBorder= dark ? "#1e3a5f" : "#bfdbfe";
+      const blueText  = dark ? "#93c5fd" : "#1d4ed8";
+      const lavSoft   = dark ? "#1a1535" : "#fff0f6";
+      const lavBorder = dark ? "#831843" : "#fce7f3";
+
+      return (
+        <div style={{ display:"flex", gap:20, maxWidth:940, margin:"0 auto", alignItems:"flex-start" }}>
+
+          {/* Projects sidebar */}
+          <div className="lf-card" style={{ width:200, flexShrink:0, padding:14, display:"flex", flexDirection:"column", gap:4 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:css.textMuted, letterSpacing:"0.06em", textTransform:"uppercase", padding:"0 6px 6px" }}>Projects</div>
+            <div className={`nav-item${selectedProject === "inbox" ? " active" : ""}`} style={{ color: selectedProject === "inbox" ? "#fff" : css.textMuted }} onClick={() => setSelectedProject("inbox")}>
+              <span>📥</span><span>Inbox</span>
+            </div>
+            {projects.map(p => (
+              <div key={p.id} style={{ display:"flex", alignItems:"center", gap:2 }}>
+                <div className={`nav-item${selectedProject === p.id ? " active" : ""}`} style={{ flex:1, minWidth:0, color: selectedProject === p.id ? "#fff" : css.textMuted }} onClick={() => setSelectedProject(p.id)}>
+                  <span>{p.emoji}</span><span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</span>
+                </div>
+                <button onClick={() => deleteProject(p.id)} title="Delete project" style={{ background:"transparent", border:"none", color:"#ef4444", opacity:0.6, cursor:"pointer", fontSize:12, padding:"4px 6px", flexShrink:0 }}>✕</button>
+              </div>
+            ))}
+            <div style={{ display:"flex", gap:6, marginTop:8 }}>
+              <input
+                className="lf-input"
+                placeholder="New project"
+                value={newProjectName}
+                onChange={e => setNewProjectName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addProject()}
+                style={{ padding:"6px 10px", fontSize:13 }}
+              />
+              <button onClick={addProject} style={{ padding:"6px 10px", borderRadius:8, background:"#db2777", color:"#fff", border:"none", cursor:"pointer", fontSize:13, flexShrink:0 }}>+</button>
+            </div>
+          </div>
+
+        <div style={{ display:"flex", flexDirection:"column", gap:24, flex:1, minWidth:0 }}>
+
+          {/* Header */}
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <div style={{ width:48, height:48, borderRadius:16, background:"linear-gradient(135deg,#93c5fd,#f472b6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{selectedProject === "inbox" ? "📥" : (activeProject?.emoji || "📝")}</div>
+            <div>
+              <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, fontWeight:400, color:css.text, lineHeight:1 }}>{selectedProject === "inbox" ? "Inbox" : (activeProject?.name || "To Do List")}</h2>
+              <p style={{ fontSize:13, color:css.textMuted, marginTop:4 }}>Small things that help keep life organized.</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+            {[
+              { label:"Total",     val:total,     icon:"📋", grad:"linear-gradient(135deg,#f472b6,#ec4899)" },
+              { label:"Completed", val:done,      icon:"✅", grad:"linear-gradient(135deg,#34d399,#059669)" },
+              { label:"Remaining", val:remaining, icon:"⏳", grad:"linear-gradient(135deg,#93c5fd,#3b82f6)" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign:"center", padding:"16px 12px", position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", top:-14, right:-14, width:64, height:64, borderRadius:"50%", background:s.grad, opacity:0.09 }} />
+                <div style={{ fontSize:22 }}>{s.icon}</div>
+                <div style={{ fontSize:26, fontWeight:700, color:css.text, marginTop:4 }}>{s.val}</div>
+                <div style={{ fontSize:11, color:css.textMuted, marginTop:1 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          {total > 0 && (
+            <div className="lf-card" style={{ padding:"16px 20px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ fontSize:14, fontWeight:600, color:css.text }}>Completion progress</span>
+                <span style={{ fontSize:20, fontWeight:700, background:"linear-gradient(90deg,#3b82f6,#f472b6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{pct}%</span>
+              </div>
+              <div style={{ height:10, borderRadius:5, background:dark?"#1e293b":"#fce7f3", overflow:"hidden" }}>
+                <div style={{ height:"100%", borderRadius:5, background:"linear-gradient(90deg,#60a5fa,#f472b6)", width:`${pct}%`, transition:"width 0.5s ease" }} />
+              </div>
+              {pct===100 && <div style={{ marginTop:10, fontSize:13, color:blueText, textAlign:"center", fontWeight:500 }}>🎉 All items checked — great job!</div>}
+            </div>
+          )}
+
+          {/* Quick add */}
+          <div style={{ background:blueSoft, border:`1px solid ${blueBorder}`, borderRadius:16, padding:"16px 18px" }}>
+            <div style={{ fontSize:11, fontWeight:700, color:blueText, marginBottom:10, letterSpacing:"0.05em", textTransform:"uppercase" }}>✦ Add item</div>
+            <div style={{ display:"flex", gap:10 }}>
+              <input
+                className="lf-input"
+                placeholder="e.g. Clean desk, Reply to messages, Backup files…"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key==="Enter" && addItem()}
+                style={{ flex:1, background:dark?"#0a1525":"#fff", borderColor:blueBorder }}
+              />
+              <button onClick={addItem} style={{ padding:"10px 20px", borderRadius:10, background:"linear-gradient(135deg,#3b82f6,#ec4899)", color:"#fff", fontWeight:600, fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>
+                + Add
+              </button>
+            </div>
+            <div style={{ fontSize:11, color:blueText, marginTop:8, opacity:0.7 }}>Press Enter to add quickly</div>
+          </div>
+
+          {/* Checklist */}
+          <div className="lf-card" style={{ padding:0, overflow:"hidden" }}>
+            {sorted.filter(i=>!i.completed).length > 0 && (
+              <div>
+                <div style={{ padding:"14px 20px 6px", fontSize:11, fontWeight:700, color:css.textMuted, letterSpacing:"0.06em", textTransform:"uppercase" }}>
+                  ⏳ To do — {remaining} remaining
+                </div>
+                {sorted.filter(i=>!i.completed).map((item,idx,arr) => (
+                  <TodoItem key={item.id} item={item} editId={editId} editText={editText} setEditId={setEditId} setEditText={setEditText} saveEdit={saveEdit} toggle={toggle} del={del} isLast={idx===arr.length-1} css={css} dark={dark} accent={blue} />
+                ))}
+              </div>
+            )}
+            {sorted.filter(i=>i.completed).length > 0 && (
+              <div>
+                <div style={{ padding:"14px 20px 6px", fontSize:11, fontWeight:700, color:css.textMuted, letterSpacing:"0.06em", textTransform:"uppercase", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <span>✅ Completed — {done}</span>
+                  <button onClick={clearDone} style={{ fontSize:11, color:"#ef4444", background:"transparent", border:"none", cursor:"pointer", fontWeight:500 }}>Clear all</button>
+                </div>
+                {sorted.filter(i=>i.completed).map((item,idx,arr) => (
+                  <TodoItem key={item.id} item={item} editId={editId} editText={editText} setEditId={setEditId} setEditText={setEditText} saveEdit={saveEdit} toggle={toggle} del={del} isLast={idx===arr.length-1} css={css} dark={dark} accent={blue} />
+                ))}
+              </div>
+            )}
+            {total === 0 && (
+              <div style={{ padding:"40px 20px", textAlign:"center" }}>
+                <div style={{ fontSize:48, marginBottom:12 }}>💙</div>
+                <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:css.text, fontWeight:400 }}>Your list is empty</div>
+                <div style={{ fontSize:13, color:css.textMuted, marginTop:6 }}>Add your first item above to get started.</div>
+              </div>
+            )}
+          </div>
+        </div>
+        </div>
+      );
+    }
+
+    function TodoItem({ item, editId, editText, setEditId, setEditText, saveEdit, toggle, del, isLast, css, dark, accent }) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 20px", borderBottom:isLast?"none":`1px solid ${css.border}` }}>
+          <button onClick={() => toggle(item.id)} style={{ width:24, height:24, borderRadius:6, flexShrink:0, border:`2px solid ${item.completed ? accent : css.border}`, background:item.completed ? accent : "transparent", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", transition:"all 0.18s" }}>
+            {item.completed && <span style={{ color:"#fff", fontSize:12, lineHeight:1 }}>✓</span>}
+          </button>
+          {editId === item.id ? (
+            <input className="lf-input" autoFocus value={editText} onChange={e => setEditText(e.target.value)}
+              onKeyDown={e => { if(e.key==="Enter") saveEdit(item.id); if(e.key==="Escape"){setEditId(null);setEditText("");} }}
+              style={{ flex:1, padding:"6px 10px", fontSize:14 }} />
+          ) : (
+            <span onDoubleClick={() => {setEditId(item.id);setEditText(item.text);}}
+              style={{ flex:1, fontSize:14, color:css.text, textDecoration:item.completed?"line-through":"none", opacity:item.completed?0.45:1, cursor:"text", lineHeight:1.5 }}>
+              {item.text}
+            </span>
+          )}
+          <div style={{ display:"flex", gap:4, flexShrink:0 }}>
+            {editId === item.id ? (
+              <>
+                <button onClick={() => saveEdit(item.id)} style={{ fontSize:12, padding:"3px 10px", borderRadius:8, background:accent, color:"#fff", border:"none", cursor:"pointer", fontWeight:500 }}>Save</button>
+                <button onClick={() => {setEditId(null);setEditText("");}} style={{ fontSize:12, padding:"3px 8px", borderRadius:8, background:css.hover, color:css.textMuted, border:"none", cursor:"pointer" }}>✕</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => {setEditId(item.id);setEditText(item.text);}} style={{ fontSize:13, padding:"3px 8px", borderRadius:8, background:"transparent", color:css.textMuted, border:"none", cursor:"pointer", opacity:0.6 }} title="Edit">✏️</button>
+                <button onClick={() => del(item.id)} style={{ fontSize:13, padding:"3px 8px", borderRadius:8, background:"transparent", color:"#ef4444", border:"none", cursor:"pointer", opacity:0.7 }} title="Delete">✕</button>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Want To Do Page ──────────────────────────────────────────────────────
+    const WANT_CATS = ["Learning","Travel","Hobby","Career","Personal Growth","Fun","Other"];
+    const WANT_CAT_COLORS = {
+      Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#f472b6",
+      Career:"#3b82f6", "Personal Growth":"#10b981", Fun:"#f97316", Other:"#94a3b8"
+    };
+    const WANT_CAT_BG_LIGHT = {
+      Learning:"#fffbeb", Travel:"#ecfeff", Hobby:"#fff0f6",
+      Career:"#eff6ff", "Personal Growth":"#f0fdf4", Fun:"#fff7ed", Other:"#f8fafc"
+    };
+    const WANT_CAT_BG_DARK = {
+      Learning:"#292000", Travel:"#002830", Hobby:"#1e0d3e",
+      Career:"#0c1a35", "Personal Growth":"#062010", Fun:"#2d1200", Other:"#1a1f2e"
+    };
+
+    function WantToDoPage({ wantItems, setWantItems, css, dark }) {
+      const [modal, setModal] = useState(false);
+      const [editId, setEditId] = useState(null);
+      const [filterCat, setFilterCat] = useState("All");
+      const [search, setSearch] = useState("");
+      const [form, setForm] = useState({ title:"", category:"Learning", note:"", completed:false });
+
+      const done  = wantItems.filter(i => i.completed).length;
+      const total = wantItems.length;
+      const pct   = total ? Math.round(done / total * 100) : 0;
+
+      const openAdd  = () => { setForm({ title:"", category:"Learning", note:"", completed:false }); setEditId(null); setModal(true); };
+      const openEdit = (item) => { setForm({ title:item.title, category:item.category, note:item.note||"", completed:item.completed }); setEditId(item.id); setModal(true); };
+
+      const save = () => {
+        if (!form.title.trim()) return;
+        if (editId) {
+          setWantItems(wantItems.map(i => i.id===editId ? { ...i, ...form } : i));
+        } else {
+          setWantItems([...wantItems, { id:uid(), ...form, createdAt:new Date().toISOString() }]);
+        }
+        setModal(false); setEditId(null);
+      };
+
+      const toggle = (id) => setWantItems(wantItems.map(i => i.id===id ? { ...i, completed:!i.completed } : i));
+      const del    = (id) => setWantItems(wantItems.filter(i => i.id!==id));
+
+      const filtered = wantItems
+        .filter(i => filterCat==="All" || i.category===filterCat)
+        .filter(i => (i.title+i.note+i.category).toLowerCase().includes(search.toLowerCase()))
+        .sort((a,b) => a.completed - b.completed || new Date(b.createdAt)-new Date(a.createdAt));
+
+      const pink     = "#f472b6";
+      const peach    = "#fb923c";
+      const pinkSoft = dark ? "#2d0a1e" : "#fdf2f8";
+      const pinkBord = dark ? "#6d1a50" : "#fbcfe8";
+      const pinkText = dark ? "#f9a8d4" : "#be185d";
+
+      // Cat counts
+      const catCounts = WANT_CATS.reduce((acc, c) => { acc[c] = wantItems.filter(i=>i.category===c).length; return acc; }, {});
+
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
+
+          {/* Header */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ width:48, height:48, borderRadius:16, background:"linear-gradient(135deg,#f9a8d4,#fb923c)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>🌟</div>
+              <div>
+                <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, fontWeight:400, color:css.text, lineHeight:1 }}>Want To Do</h2>
+                <p style={{ fontSize:13, color:css.textMuted, marginTop:4 }}>Dreams, ideas, and experiences I want to explore.</p>
+              </div>
+            </div>
+            <button onClick={openAdd} style={{ padding:"10px 22px", borderRadius:12, background:"linear-gradient(135deg,#f472b6,#fb923c)", color:"#fff", fontWeight:600, fontSize:14, border:"none", cursor:"pointer" }}>
+              + Add goal
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))", gap:12 }}>
+            {[
+              { label:"Total goals",   val:total,      icon:"🌟", grad:"linear-gradient(135deg,#f9a8d4,#f472b6)" },
+              { label:"Achieved",      val:done,       icon:"🏆", grad:"linear-gradient(135deg,#fcd34d,#fb923c)" },
+              { label:"Still dreaming",val:total-done, icon:"💭", grad:"linear-gradient(135deg,#fbb6ce,#f472b6)" },
+              { label:"Completion",    val:`${pct}%`,  icon:"📊", grad:"linear-gradient(135deg,#86efac,#10b981)" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign:"center", padding:"16px 12px", position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", top:-12, right:-12, width:60, height:60, borderRadius:"50%", background:s.grad, opacity:0.1 }} />
+                <div style={{ fontSize:22 }}>{s.icon}</div>
+                <div style={{ fontSize:22, fontWeight:700, color:css.text, marginTop:4 }}>{s.val}</div>
+                <div style={{ fontSize:11, color:css.textMuted, marginTop:1 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress */}
+          {total > 0 && (
+            <div className="lf-card" style={{ padding:"16px 20px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ fontSize:14, fontWeight:600, color:css.text }}>Goals achieved</span>
+                <span style={{ fontSize:20, fontWeight:700, background:"linear-gradient(90deg,#f472b6,#fb923c)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{pct}%</span>
+              </div>
+              <div style={{ height:10, borderRadius:5, background:dark?"#2d1020":"#fce7f3", overflow:"hidden" }}>
+                <div style={{ height:"100%", borderRadius:5, background:"linear-gradient(90deg,#f472b6,#fb923c)", width:`${pct}%`, transition:"width 0.5s ease" }} />
+              </div>
+            </div>
+          )}
+
+          {/* Category chips */}
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+            <button onClick={() => setFilterCat("All")} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:600, border:`1.5px solid ${filterCat==="All"?pink:css.border}`, background:filterCat==="All"?pink:"transparent", color:filterCat==="All"?"#fff":css.textMuted, cursor:"pointer" }}>
+              All ({total})
+            </button>
+            {WANT_CATS.filter(c => catCounts[c]>0).map(c => (
+              <button key={c} onClick={() => setFilterCat(c===filterCat?"All":c)} style={{ padding:"6px 14px", borderRadius:20, fontSize:12, fontWeight:600, border:`1.5px solid ${filterCat===c?(WANT_CAT_COLORS[c]||pink):css.border}`, background:filterCat===c?(WANT_CAT_COLORS[c]||pink):"transparent", color:filterCat===c?"#fff":css.textMuted, cursor:"pointer" }}>
+                {c} ({catCounts[c]})
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <input className="lf-input" placeholder="🔍 Search goals, ideas, dreams…" value={search} onChange={e => setSearch(e.target.value)} />
+
+          {/* Goal cards */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))", gap:16 }}>
+            {filtered.length === 0 && (
+              <div style={{ gridColumn:"1/-1" }}>
+                <div style={{ textAlign:"center", padding:"48px 20px" }}>
+                  <div style={{ fontSize:52, marginBottom:12 }}>🌸</div>
+                  <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:css.text }}>
+                    {search||filterCat!=="All" ? "No matches found" : "Your dream list awaits"}
+                  </div>
+                  <div style={{ fontSize:13, color:css.textMuted, marginTop:6 }}>
+                    {search||filterCat!=="All" ? "Try a different search or filter." : "Start adding things you want to do, learn, and experience."}
+                  </div>
+                </div>
+              </div>
+            )}
+            {filtered.map(item => {
+              const catColor = WANT_CAT_COLORS[item.category] || "#94a3b8";
+              const cardBg   = dark ? (WANT_CAT_BG_DARK[item.category]||"#1a1a2e") : (WANT_CAT_BG_LIGHT[item.category]||"#fff");
+              return (
+                <div key={item.id} className="lf-card" style={{ background:cardBg, border:`1px solid ${catColor}30`, position:"relative", overflow:"hidden", opacity:item.completed?0.7:1 }}>
+                  {/* Decorative blob */}
+                  <div style={{ position:"absolute", top:-20, right:-20, width:80, height:80, borderRadius:"50%", background:catColor, opacity:0.07, pointerEvents:"none" }} />
+
+                  {/* Category badge */}
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                    <span style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:catColor+"22", color:catColor, fontWeight:700 }}>{item.category}</span>
+                    {item.completed && <span style={{ fontSize:11, padding:"3px 10px", borderRadius:20, background:"#d1fae5", color:"#059669", fontWeight:700 }}>✓ Achieved</span>}
+                  </div>
+
+                  {/* Title */}
+                  <div style={{ fontWeight:600, fontSize:15, color:css.text, marginBottom:item.note?6:0, textDecoration:item.completed?"line-through":"none", lineHeight:1.4 }}>
+                    {item.title}
+                  </div>
+
+                  {/* Note */}
+                  {item.note && (
+                    <div style={{ fontSize:12, color:css.textMuted, lineHeight:1.5, marginBottom:8 }}>{item.note}</div>
+                  )}
+
+                  {/* Footer */}
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:12 }}>
+                    <span style={{ fontSize:10, color:css.textMuted }}>
+                      {new Date(item.createdAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+                    </span>
+                    <div style={{ display:"flex", gap:6 }}>
+                      <button onClick={() => toggle(item.id)} style={{ fontSize:11, padding:"4px 10px", borderRadius:8, border:`1.5px solid ${catColor}`, background:item.completed?catColor:"transparent", color:item.completed?"#fff":catColor, cursor:"pointer", fontWeight:600 }}>
+                        {item.completed ? "✓ Done" : "Mark done"}
+                      </button>
+                      <button onClick={() => openEdit(item)} style={{ fontSize:12, padding:"4px 8px", borderRadius:8, background:css.hover, color:css.textMuted, border:"none", cursor:"pointer" }}>✏️</button>
+                      <button onClick={() => del(item.id)} style={{ fontSize:12, padding:"4px 8px", borderRadius:8, background:"transparent", color:"#ef4444", border:"none", cursor:"pointer" }}>✕</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add / Edit Modal */}
+          {modal && (
+            <div className="modal-overlay" onClick={() => setModal(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()} style={{ background:css.card }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+                  <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#f9a8d4,#fb923c)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🌟</div>
+                  <h3 style={{ fontWeight:600, color:css.text, fontSize:17 }}>{editId ? "Edit goal" : "Add new goal"}</h3>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                  <div>
+                    <label style={{ fontSize:12, color:css.textMuted, display:"block", marginBottom:5, fontWeight:600 }}>Goal / Dream *</label>
+                    <input className="lf-input" placeholder="e.g. Visit Japan, Learn Blender…" value={form.title} onChange={e => setForm({...form,title:e.target.value})} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize:12, color:css.textMuted, display:"block", marginBottom:5, fontWeight:600 }}>Category</label>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                      {WANT_CATS.map(c => (
+                        <button key={c} onClick={() => setForm({...form,category:c})} style={{ padding:"5px 12px", borderRadius:20, fontSize:12, fontWeight:600, border:`1.5px solid ${form.category===c?(WANT_CAT_COLORS[c]||pink):css.border}`, background:form.category===c?(WANT_CAT_COLORS[c]||pink):"transparent", color:form.category===c?"#fff":css.textMuted, cursor:"pointer" }}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize:12, color:css.textMuted, display:"block", marginBottom:5, fontWeight:600 }}>Notes (optional)</label>
+                    <textarea className="lf-input" placeholder="Why do you want this? Any details…" value={form.note} onChange={e => setForm({...form,note:e.target.value})} rows={3} style={{ resize:"vertical" }} />
+                  </div>
+                  {editId && (
+                    <label style={{ display:"flex", alignItems:"center", gap:10, fontSize:14, color:css.text, cursor:"pointer" }}>
+                      <input type="checkbox" checked={form.completed} onChange={e => setForm({...form,completed:e.target.checked})} style={{ width:16, height:16 }} />
+                      Mark as achieved
+                    </label>
+                  )}
+                  <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:4 }}>
+                    <button className="lf-btn lf-btn-ghost" onClick={() => setModal(false)}>Cancel</button>
+                    <button onClick={save} style={{ padding:"10px 22px", borderRadius:10, background:"linear-gradient(135deg,#f472b6,#fb923c)", color:"#fff", fontWeight:600, fontSize:14, border:"none", cursor:"pointer" }}>
+                      {editId ? "Save changes" : "Add goal"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Today Page ────────────────────────────────────────────────────────────
+    function TodayPage({ todayItems, setTodayItems, dailyHistory, setDailyHistory, css, dark }) {
+      const [input, setInput] = useState("");
+      const [editId, setEditId] = useState(null);
+      const [editText, setEditText] = useState("");
+      const [endMsg, setEndMsg] = useState(""); // "" | "saved" | "already" | "empty"
+
+      const todayStr = today();
+      const done  = todayItems.filter(i => i.completed).length;
+      const total = todayItems.length;
+      const remaining = total - done;
+      const pct   = total ? Math.round(done / total * 100) : 0;
+      const alreadyArchived = dailyHistory.some(h => h.date === todayStr);
+
+      const sorted = [...todayItems].sort((a, b) => {
+        if (a.completed === b.completed) return new Date(b.createdAt) - new Date(a.createdAt);
+        return a.completed - b.completed;
+      });
+
+      const addItem = () => {
+        const t = input.trim();
+        if (!t) return;
+        setTodayItems([...todayItems, { id: uid(), text: t, completed: false, createdAt: new Date().toISOString() }]);
+        setInput("");
+      };
+
+      const toggle = (id) => setTodayItems(todayItems.map(i => i.id === id ? { ...i, completed: !i.completed } : i));
+      const del    = (id) => setTodayItems(todayItems.filter(i => i.id !== id));
+      const saveEdit = (id) => {
+        if (!editText.trim()) return;
+        setTodayItems(todayItems.map(i => i.id === id ? { ...i, text: editText.trim() } : i));
+        setEditId(null); setEditText("");
+      };
+      const clearCompleted = () => setTodayItems(todayItems.filter(i => !i.completed));
+
+      const endDay = () => {
+        if (total === 0) { setEndMsg("empty"); setTimeout(()=>setEndMsg(""),3000); return; }
+        if (alreadyArchived) {
+          // overwrite existing record for today
+          const record = {
+            date: todayStr,
+            items: todayItems.map(i => ({ id:i.id, text:i.text, completed:i.completed })),
+            completedCount: done,
+            totalCount: total,
+            completionRate: pct,
+          };
+          setDailyHistory([...dailyHistory.filter(h => h.date !== todayStr), record]);
+          setEndMsg("updated");
+        } else {
+          const record = {
+            date: todayStr,
+            items: todayItems.map(i => ({ id:i.id, text:i.text, completed:i.completed })),
+            completedCount: done,
+            totalCount: total,
+            completionRate: pct,
+          };
+          setDailyHistory([...dailyHistory, record]);
+          setEndMsg("saved");
+        }
+        setTodayItems([]);
+        setTimeout(() => setEndMsg(""), 4000);
+      };
+
+      const allDone = total > 0 && done === total;
+
+      // pastel pink/lavender accent vars
+      const accent      = "#ec4899";
+      const accentSoft  = dark ? "#4a1942" : "#fdf2f8";
+      const accentBorder= dark ? "#6d2460" : "#fbcfe8";
+      const accentText  = dark ? "#f9a8d4" : "#be185d";
+      const lavSoft     = dark ? "#3d0a1e" : "#fff5f8";
+      const lavBorder   = dark ? "#be185d" : "#fbcfe8";
+      const lavText     = dark ? "#fbb6ce" : "#be185d";
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 680, margin: "0 auto" }}>
+
+          {/* Header */}
+          <div>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap:"wrap" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #f9a8d4, #f9a8d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>☀️</div>
+                <div>
+                  <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: css.text, lineHeight: 1 }}>Today's Plan</h2>
+                  <p style={{ fontSize: 13, color: css.textMuted, marginTop: 4 }}>
+                    {allDone ? "🎉 Everything done — great work!" : "Focus on what matters today."}
+                  </p>
+                </div>
+              </div>
+              {/* End Today button */}
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
+                <button
+                  onClick={endDay}
+                  style={{ padding:"10px 18px", borderRadius:12, background: alreadyArchived ? (dark?"#3d0a1e":"#fce7f3") : "linear-gradient(135deg,#f472b6,#ec4899)", color: alreadyArchived ? lavText : "#fff", fontWeight:600, fontSize:13, border: alreadyArchived?`1px solid ${lavBorder}`:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:7, whiteSpace:"nowrap" }}
+                >
+                  🌙 {alreadyArchived ? "Re-archive Today" : "End Today"}
+                </button>
+                {alreadyArchived && <div style={{ fontSize:10, color:lavText }}>✦ Already archived today</div>}
+              </div>
+            </div>
+            {/* Success/status messages */}
+            {endMsg === "saved" && (
+              <div style={{ marginTop:12, padding:"12px 16px", background: dark?"#1a2d1a":"#d1fae5", border:"1px solid #6ee7b7", borderRadius:12, fontSize:13, color:"#065f46", display:"flex", alignItems:"center", gap:8 }}>
+                🌙 <strong>Today's memories have been saved.</strong> Your checklist has been archived and cleared for tomorrow.
+              </div>
+            )}
+            {endMsg === "updated" && (
+              <div style={{ marginTop:12, padding:"12px 16px", background: dark?"#2d0a1e":"#fce7f3", border:`1px solid ${lavBorder}`, borderRadius:12, fontSize:13, color:lavText, display:"flex", alignItems:"center", gap:8 }}>
+                💜 <strong>Archive updated.</strong> Today's log has been refreshed with your latest progress.
+              </div>
+            )}
+            {endMsg === "empty" && (
+              <div style={{ marginTop:12, padding:"12px 16px", background: dark?"#2d1b1b":"#fee2e2", border:"1px solid #fca5a5", borderRadius:12, fontSize:13, color:"#b91c1c", display:"flex", alignItems:"center", gap:8 }}>
+                ☁️ <strong>Nothing to save.</strong> Add some items first before ending your day.
+              </div>
+            )}
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            {[
+              { label: "Total", val: total, icon: "📋", grad: "linear-gradient(135deg, #f472b6, #be185d)" },
+              { label: "Completed", val: done, icon: "✅", grad: "linear-gradient(135deg, #34d399, #059669)" },
+              { label: "Remaining", val: remaining, icon: "⏳", grad: "linear-gradient(135deg, #f9a8d4, #ec4899)" },
+            ].map(s => (
+              <div key={s.label} className="lf-card" style={{ textAlign: "center", padding: "16px 12px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: -12, right: -12, width: 60, height: 60, borderRadius: "50%", background: s.grad, opacity: 0.08 }} />
+                <div style={{ fontSize: 22 }}>{s.icon}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: css.text, marginTop: 4 }}>{s.val}</div>
+                <div style={{ fontSize: 11, color: css.textMuted, marginTop: 1 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress */}
+          {total > 0 && (
+            <div className="lf-card" style={{ padding: "16px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: css.text }}>Daily progress</span>
+                <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,#ec4899,#ec4899)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{pct}%</span>
+              </div>
+              <div style={{ height: 10, borderRadius: 5, background: dark ? "#4a1c2e" : "#fce7f3", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg, #ec4899, #ec4899)", width: `${pct}%`, transition: "width 0.5s ease" }} />
+              </div>
+              {allDone && (
+                <div style={{ marginTop: 10, fontSize: 13, color: accentText, textAlign: "center", fontWeight: 500 }}>
+                  🎊 All done! You crushed today's plan!
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Add input */}
+          <div style={{ background: accentSoft, border: `1px solid ${accentBorder}`, borderRadius: 16, padding: "16px 18px" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: accentText, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>✦ Add to today</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input
+                className="lf-input"
+                placeholder="e.g. Read Python for 30 minutes, Buy groceries…"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addItem()}
+                style={{ flex: 1, background: dark ? "#1a0a2e" : "#fff", borderColor: accentBorder }}
+              />
+              <button
+                onClick={addItem}
+                style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #ec4899, #ec4899)", color: "#fff", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                + Add
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: accentText, marginTop: 8, opacity: 0.7 }}>Press Enter to add quickly</div>
+          </div>
+
+          {/* Checklist */}
+          <div className="lf-card" style={{ padding: 0, overflow: "hidden" }}>
+            {/* incomplete items */}
+            {sorted.filter(i => !i.completed).length > 0 && (
+              <div>
+                <div style={{ padding: "14px 20px 6px", fontSize: 11, fontWeight: 700, color: css.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  ⏳ To do — {sorted.filter(i => !i.completed).length} remaining
+                </div>
+                {sorted.filter(i => !i.completed).map((item, idx, arr) => (
+                  <TodayItem
+                    key={item.id} item={item}
+                    editId={editId} editText={editText}
+                    setEditId={setEditId} setEditText={setEditText}
+                    saveEdit={saveEdit} toggle={toggle} del={del}
+                    isLast={idx === arr.length - 1} css={css} dark={dark}
+                    accent={accent} accentSoft={accentSoft}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* completed items */}
+            {sorted.filter(i => i.completed).length > 0 && (
+              <div>
+                <div style={{ padding: "14px 20px 6px", fontSize: 11, fontWeight: 700, color: css.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>✅ Completed — {done}</span>
+                  <button onClick={clearCompleted} style={{ fontSize: 11, color: "#ef4444", background: "transparent", border: "none", cursor: "pointer", fontWeight: 500 }}>Clear all</button>
+                </div>
+                {sorted.filter(i => i.completed).map((item, idx, arr) => (
+                  <TodayItem
+                    key={item.id} item={item}
+                    editId={editId} editText={editText}
+                    setEditId={setEditId} setEditText={setEditText}
+                    saveEdit={saveEdit} toggle={toggle} del={del}
+                    isLast={idx === arr.length - 1} css={css} dark={dark}
+                    accent={accent} accentSoft={accentSoft}
+                  />
+                ))}
+              </div>
+            )}
+
+            {total === 0 && (
+              <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🌸</div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: css.text, fontWeight: 400 }}>A fresh day awaits</div>
+                <div style={{ fontSize: 13, color: css.textMuted, marginTop: 6 }}>Add your first item above to get started.</div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function TodayItem({ item, editId, editText, setEditId, setEditText, saveEdit, toggle, del, isLast, css, dark, accent, accentSoft }) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderBottom: isLast ? "none" : `1px solid ${css.border}`, transition: "background 0.15s" }}>
+          {/* Circle checkbox */}
+          <button
+            onClick={() => toggle(item.id)}
+            style={{
+              width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+              border: `2px solid ${item.completed ? accent : css.border}`,
+              background: item.completed ? accent : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all 0.18s"
+            }}
+          >
+            {item.completed && <span style={{ color: "#fff", fontSize: 12, lineHeight: 1 }}>✓</span>}
+          </button>
+
+          {/* Text or edit input */}
+          {editId === item.id ? (
+            <input
+              className="lf-input"
+              autoFocus
+              value={editText}
+              onChange={e => setEditText(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") saveEdit(item.id); if (e.key === "Escape") { setEditId(null); setEditText(""); } }}
+              style={{ flex: 1, padding: "6px 10px", fontSize: 14 }}
+            />
+          ) : (
+            <span
+              style={{ flex: 1, fontSize: 14, color: css.text, textDecoration: item.completed ? "line-through" : "none", opacity: item.completed ? 0.45 : 1, cursor: "text", lineHeight: 1.5 }}
+              onDoubleClick={() => { setEditId(item.id); setEditText(item.text); }}
+            >
+              {item.text}
+            </span>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+            {editId === item.id ? (
+              <>
+                <button onClick={() => saveEdit(item.id)} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 8, background: accent, color: "#fff", border: "none", cursor: "pointer", fontWeight: 500 }}>Save</button>
+                <button onClick={() => { setEditId(null); setEditText(""); }} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 8, background: css.hover, color: css.textMuted, border: "none", cursor: "pointer" }}>✕</button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setEditId(item.id); setEditText(item.text); }}
+                  style={{ fontSize: 13, padding: "3px 8px", borderRadius: 8, background: "transparent", color: css.textMuted, border: "none", cursor: "pointer", opacity: 0.6 }}
+                  title="Edit"
+                >✏️</button>
+                <button
+                  onClick={() => del(item.id)}
+                  style={{ fontSize: 13, padding: "3px 8px", borderRadius: 8, background: "transparent", color: "#ef4444", border: "none", cursor: "pointer", opacity: 0.7 }}
+                  title="Delete"
+                >✕</button>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function LifeFlow() {
+      const [dark, setDark] = useLS("lf_dark", false);
+      const [tab, setTab] = useState("dashboard");
+      const [tasks, setTasks] = useLS("lf_tasks", seedTasks);
+      const [habits, setHabits] = useLS("lf_habits", seedHabits);
+      const [events, setEvents] = useLS("lf_events", seedEvents);
+      const [moods, setMoods] = useLS("lf_moods", []);
+      const [journals, setJournals] = useLS("lf_journals", []);
+      const [todayItems, setTodayItems] = useLS("lf_today_items", []);
+      const [todoItems, setTodoItems] = useLS("lf_todo_items", []);
+      const [projects, setProjects] = useLS("lf_projects", []);
+      const [wantItems, setWantItems] = useLS("lf_want_items", []);
+      const [dailyHistory, setDailyHistory] = useLS("lf_daily_history", []);
+
+      const quote = QUOTES[new Date().getDay() % QUOTES.length];
+      const css = dark ? darkCSS : lightCSS;
+
+      const dynCSS = `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: ${css.bg}; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: ${dark ? "#444" : "#ddd"}; border-radius: 3px; }
+        input, textarea, select { outline: none; font-family: inherit; color: ${css.text}; }
+        button { cursor: pointer; font-family: inherit; border: none; }
+        .lf-card { background: ${css.card}; border: 1px solid ${css.border}; border-radius: 16px; padding: 20px; transition: box-shadow 0.2s; }
+        .lf-card:hover { box-shadow: 0 4px 20px ${dark ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.08)"}; }
+        .lf-input { background: ${css.input}; border: 1px solid ${css.border}; color: ${css.text}; border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 14px; }
+        .lf-input:focus { border-color: #db2777; outline: none; }
+        .lf-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; }
+        .lf-btn-primary { background: #db2777; color: #fff; }
+        .lf-btn-primary:hover { background: #be185d; }
+        .lf-btn-ghost { background: transparent; color: ${css.textMuted}; border: 1px solid ${css.border}; }
+        .lf-btn-ghost:hover { background: ${css.hover}; color: ${css.text}; }
+        .nav-item { padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; white-space: nowrap; }
+        .nav-item.active { background: #db2777; color: #fff; }
+        .nav-item:not(.active):hover { background: ${css.hover}; }
+        .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal { background: ${css.card}; border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+        .cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; }
+        .cal-day:hover { background: ${css.hover}; }
+        .cal-day.today { background: #db2777; color: #fff; font-weight: 600; }
+        .progress-bar { height: 6px; border-radius: 3px; background: ${dark ? "#333" : "#f1f5f9"}; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+        .streak-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+        @media (max-width: 768px) { .sidebar { display: none !important; } .top-nav { display: flex !important; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+      `;
+
+      return (
+        <div style={{ ...css.app, fontFamily: "'DM Sans', 'Segoe UI', sans-serif", minHeight: "100vh" }}>
+          <style dangerouslySetInnerHTML={{ __html: dynCSS }} />
+          <div style={{ display: "flex", minHeight: "100vh" }}>
+            <aside className="sidebar" style={{ width: 220, background: css.sidebar, borderRight: `1px solid ${css.border}`, padding: "24px 12px", display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+              <div style={{ padding: "0 8px 24px" }}>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#db2777" }}>LifeFlow</div>
+                <div style={{ fontSize: 11, color: css.textMuted, marginTop: 2 }}>Your personal OS</div>
+              </div>
+              {[["dashboard","🏠","Dashboard"],["today","☀️","Today"],["calendar","📅","Calendar"],["tasks","✅","Tasks"],["todo","📝","To Do List"],["wantodo","🌟","Want To Do"],["habits","🔥","Habits"],["mood","💫","Mood"],["journal","📝","Journal"]].map(([id, icon, label]) => (
+                <div key={id} className={`nav-item${tab === id ? " active" : ""}`} style={{ color: tab === id ? "#fff" : css.textMuted }} onClick={() => setTab(id)}>
+                  <span>{icon}</span><span>{label}</span>
+                </div>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div className="nav-item" style={{ color: css.textMuted }} onClick={() => setDark(!dark)}>
+                <span>{dark ? "☀️" : "🌙"}</span><span>{dark ? "Light mode" : "Dark mode"}</span>
+              </div>
+            </aside>
+
+            <main style={{ flex: 1, padding: "24px 28px", overflowY: "auto", background: css.bg, minHeight: "100vh" }}>
+              <div className="top-nav" style={{ display: "none", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 4 }}>
+                {[["dashboard","🏠"],["today","☀️"],["calendar","📅"],["tasks","✅"],["todo","📝"],["wantodo","🌟"],["habits","🔥"],["mood","💫"],["journal","📖"]].map(([id,icon]) => (
+                  <button key={id} className={`lf-btn${tab===id?" lf-btn-primary":" lf-btn-ghost"}`} style={{ padding: "8px 14px", borderRadius: 20, fontSize: 20 }} onClick={() => setTab(id)}>{icon}</button>
+                ))}
+                <button className="lf-btn lf-btn-ghost" style={{ marginLeft: "auto", borderRadius: 20 }} onClick={() => setDark(!dark)}>{dark ? "☀️" : "🌙"}</button>
+              </div>
+
+              <div className="fade-in" key={tab}>
+                {tab === "dashboard" && <Dashboard tasks={tasks} habits={habits} events={events} moods={moods} journals={journals} todayItems={todayItems} todoItems={todoItems} wantItems={wantItems} dailyHistory={dailyHistory} quote={quote} css={css} dark={dark} setTab={setTab} />}
+                {tab === "today"     && <TodayPage todayItems={todayItems} setTodayItems={setTodayItems} dailyHistory={dailyHistory} setDailyHistory={setDailyHistory} css={css} dark={dark} />}
+                {tab === "calendar"  && <Calendar events={events} setEvents={setEvents} dailyHistory={dailyHistory} css={css} dark={dark} />}
+                {tab === "tasks"     && <Tasks tasks={tasks} setTasks={setTasks} css={css} dark={dark} />}
+                {tab === "todo"      && <TodoListPage todoItems={todoItems} setTodoItems={setTodoItems} projects={projects} setProjects={setProjects} css={css} dark={dark} />}
+                {tab === "wantodo"   && <WantToDoPage wantItems={wantItems} setWantItems={setWantItems} css={css} dark={dark} />}
+                {tab === "habits"    && <Habits habits={habits} setHabits={setHabits} css={css} dark={dark} />}
+                {tab === "mood"      && <MoodTracker moods={moods} setMoods={setMoods} css={css} dark={dark} />}
+                {tab === "journal"   && <Journal journals={journals} setJournals={setJournals} css={css} dark={dark} />}
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<LifeFlow />);
+  </script>
+</body>
+</html>
