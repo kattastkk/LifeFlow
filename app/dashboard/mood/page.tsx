@@ -77,7 +77,7 @@ export default async function MoodPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px,1fr))", gap: 12 }}>
         {[
-          { label: "Days tracked", val: moods.length, color: "#8b5cf6" },
+          { label: "Days tracked", val: moods.length, color: "#db2777" },
           { label: "Avg mood (1-5)", val: avg, color: "#f59e0b" },
           { label: "Today's mood", val: todayMood ? MOODS.find((m) => m.value === todayMood.value)?.icon : "—", color: "#10b981" },
         ].map((s) => (

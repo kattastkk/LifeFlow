@@ -33,7 +33,7 @@ export default async function LoginPage({
             name="email"
             type="email"
             required
-            className="rounded-[10px] border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-[10px] border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-sidebar-active"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -45,12 +45,12 @@ export default async function LoginPage({
             name="password"
             type="password"
             required
-            className="rounded-[10px] border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-[10px] border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-sidebar-active"
           />
         </div>
         <button
           type="submit"
-          className="mt-2 rounded-[10px] bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="mt-2 rounded-[10px] bg-sidebar-active px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
           Log in
         </button>
@@ -73,7 +73,7 @@ export default async function LoginPage({
 
       <p className="text-center text-sm text-muted">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link href="/signup" className="font-medium text-sidebar-active hover:underline">
           Sign up
         </Link>
       </p>

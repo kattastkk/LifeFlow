@@ -46,7 +46,7 @@ export default async function JournalPage(props: PageProps<"/dashboard/journal">
           {editing && <input type="hidden" name="id" value={editing.id} />}
           {!editing && (
             <div style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: 12, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 4 }}>✨ Today&apos;s prompt</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 4 }}>✨ Today&apos;s prompt</div>
               <div style={{ fontSize: 14, color: "#6d28d9", fontStyle: "italic" }}>{prompt}</div>
               <input type="hidden" name="prompt" value={prompt} />
             </div>
@@ -81,7 +81,7 @@ export default async function JournalPage(props: PageProps<"/dashboard/journal">
       {view === "list" && !editing && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: 14, padding: "16px 20px" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 6 }}>✨ Today&apos;s reflection prompt</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 6 }}>✨ Today&apos;s reflection prompt</div>
             <div style={{ fontSize: 15, color: "#6d28d9", fontStyle: "italic", marginBottom: 12 }}>&quot;{prompt}&quot;</div>
             <Link href="/dashboard/journal?view=write" className="lf-btn lf-btn-primary" style={{ fontSize: 13 }}>
               Start writing
@@ -101,7 +101,7 @@ export default async function JournalPage(props: PageProps<"/dashboard/journal">
             )}
             {filtered.map((j) => (
               <div key={j.id} className="lf-card">
-                <div style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600, marginBottom: 4 }}>📅 {j.date}</div>
+                <div style={{ fontSize: 11, color: "#db2777", fontWeight: 600, marginBottom: 4 }}>📅 {j.date}</div>
                 {j.title && <div style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: 6 }}>{j.title}</div>}
                 {j.prompt && <div style={{ fontSize: 11, fontStyle: "italic", color: "var(--muted)", marginBottom: 6 }}>{j.prompt}</div>}
                 <div
@@ -118,7 +118,7 @@ export default async function JournalPage(props: PageProps<"/dashboard/journal">
                   {j.content}
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 12 }}>
-                  <Link href={`/dashboard/journal?edit=${j.id}`} style={{ fontSize: 11, color: "#8b5cf6" }}>
+                  <Link href={`/dashboard/journal?edit=${j.id}`} style={{ fontSize: 11, color: "#db2777" }}>
                     Edit
                   </Link>
                   <form action={deleteJournalEntry}>

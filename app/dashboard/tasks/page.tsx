@@ -91,7 +91,7 @@ export default async function TasksPage(props: PageProps<"/dashboard/tasks">) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         {[
-          { label: "Total", val: tasks.length, color: "#8b5cf6" },
+          { label: "Total", val: tasks.length, color: "#db2777" },
           { label: "Completed", val: completed, color: "#10b981" },
           { label: "In progress", val: inProgress, color: "#f59e0b" },
           { label: "Completion rate", val: `${pct}%`, color: "#3b82f6" },
@@ -106,10 +106,10 @@ export default async function TasksPage(props: PageProps<"/dashboard/tasks">) {
       <div className="lf-card">
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 500, color: "var(--foreground)" }}>Overall completion</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#8b5cf6" }}>{pct}%</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#db2777" }}>{pct}%</span>
         </div>
         <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #8b5cf6, #ec4899)" }} />
+          <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #db2777, #ec4899)" }} />
         </div>
       </div>
 

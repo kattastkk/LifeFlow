@@ -66,7 +66,7 @@
       { id: uid(), title: "Weekly review", desc: "Review goals and plan next week", due: today(), priority: "High", category: "Personal", status: "To Do" },
     ];
     const seedHabits = [
-      { id: uid(), name: "Morning meditation", emoji: "🧘", color: "#8b5cf6", completions: {} },
+      { id: uid(), name: "Morning meditation", emoji: "🧘", color: "#db2777", completions: {} },
       { id: uid(), name: "Drink 8 glasses of water", emoji: "💧", color: "#3b82f6", completions: {} },
       { id: uid(), name: "Read for 20 minutes", emoji: "📚", color: "#10b981", completions: {} },
       { id: uid(), name: "Exercise", emoji: "🏃", color: "#f59e0b", completions: {} },
@@ -176,7 +176,7 @@
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
             {[
-              { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#8b5cf6" },
+              { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#db2777" },
               { label: "Habits done", value: `${habitsDoneToday}/${habits.length}`, icon: "🔥", color: "#f59e0b" },
               { label: "Best streak", value: `${maxStreak}d`, icon: "⚡", color: "#ef4444" },
               { label: "Overall progress", value: `${totalTasks ? Math.round(completedTotal/totalTasks*100) : 0}%`, icon: "📈", color: "#10b981" },
@@ -243,7 +243,7 @@
               {todayEvents.length === 0 && <EmptyState msg="No events today" icon="📭" css={css} />}
               {todayEvents.slice(0, 4).map(e => (
                 <div key={e.id} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: `1px solid ${css.border}` }}>
-                  <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>{e.time}</div>
+                  <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>{e.time}</div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 500, color: css.text }}>{e.title}</div>
                     {e.desc && <div style={{ fontSize: 12, color: css.textMuted }}>{e.desc}</div>}
@@ -439,7 +439,7 @@
                 <SectionHeader title="Daily Activity Insights" icon="📊" action="View Calendar" onAction={() => setTab("calendar")} css={css} />
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12 }}>
                   {[
-                    { label:"Days archived", val:dailyHistory.length, icon:"📅", color:"#8b5cf6" },
+                    { label:"Days archived", val:dailyHistory.length, icon:"📅", color:"#db2777" },
                     { label:"Avg completion", val:`${avgRate}%`, icon:"📈", color:"#ec4899" },
                     { label:"Prod. streak", val:`${streak}d`, icon:"🔥", color:"#f59e0b" },
                     { label:"Done this week", val:weekDone, icon:"⚡", color:"#10b981" },
@@ -475,7 +475,7 @@
                 <div key={k} style={{ borderLeft: `1px solid ${css.border}`, padding: "8px 8px" }}>
                   <div style={{ textAlign: "center", marginBottom: 8 }}>
                     <div style={{ fontSize: 11, color: css.textMuted }}>{DAYS_SHORT[d.getDay()]}</div>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: isToday ? "#8b5cf6" : "transparent", color: isToday ? "#fff" : css.text, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: isToday ? 600 : 400, margin: "4px auto 0" }}>{d.getDate()}</div>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: isToday ? "#db2777" : "transparent", color: isToday ? "#fff" : css.text, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: isToday ? 600 : 400, margin: "4px auto 0" }}>{d.getDate()}</div>
                   </div>
                   {dayEvents.map(e => (
                     <div key={e.id} style={{ background: dark ? "#312e81" : "#ede9fe", color: "#7c3aed", borderRadius: 6, padding: "4px 8px", fontSize: 11, marginBottom: 4, cursor: "pointer" }} onClick={() => onEdit(e)}>
@@ -581,7 +581,7 @@
                         )}
                       </div>
                       {evs.slice(0, 2).map(e => (
-                        <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: dark ? "#312e81" : "#ede9fe", color: "#8b5cf6", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" }}
+                        <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: dark ? "#312e81" : "#ede9fe", color: "#db2777", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" }}
                           onClick={(ev) => { ev.stopPropagation(); setForm({...e}); setModal("edit"); }}>{e.title}</div>
                       ))}
                       {evs.length > 2 && <div style={{ fontSize: 10, color: css.textMuted, paddingLeft: 6 }}>+{evs.length-2}</div>}
@@ -630,7 +630,7 @@
             {events.length === 0 && <EmptyState msg="No events yet" icon="📭" css={css} />}
             {[...events].sort((a,b) => a.date > b.date ? 1 : -1).map(e => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${css.border}` }}>
-                <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
+                <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
                   <div>{fmt(e.date)}</div><div>{e.time}</div>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -779,7 +779,7 @@
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
             {[
-              { label: "Total", val: tasks.length, color: "#8b5cf6" },
+              { label: "Total", val: tasks.length, color: "#db2777" },
               { label: "Completed", val: completed, color: "#10b981" },
               { label: "In progress", val: inProg, color: "#f59e0b" },
               { label: "Completion rate", val: `${pct}%`, color: "#3b82f6" },
@@ -794,10 +794,10 @@
           <div className="lf-card">
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: css.text }}>Overall completion</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#8b5cf6" }}>{pct}%</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#db2777" }}>{pct}%</span>
             </div>
             <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #8b5cf6, #ec4899)" }} />
+              <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #db2777, #ec4899)" }} />
             </div>
           </div>
 
@@ -872,7 +872,7 @@
 
     function Habits({ habits, setHabits, css, dark }) {
       const [modal, setModal] = useState(false);
-      const [form, setForm] = useState({ name:"", emoji:"🌟", color:"#8b5cf6" });
+      const [form, setForm] = useState({ name:"", emoji:"🌟", color:"#db2777" });
       const [editId, setEditId] = useState(null);
       const todayStr = today();
 
@@ -905,24 +905,24 @@
         if (editId) { setHabits(habits.map(h => h.id === editId ? { ...h, ...form } : h)); }
         else { setHabits([...habits, { ...form, id: uid(), completions: {} }]); }
         setModal(false); setEditId(null);
-        setForm({ name:"", emoji:"🌟", color:"#8b5cf6" });
+        setForm({ name:"", emoji:"🌟", color:"#db2777" });
       };
 
       const EMOJIS = ["🌟","🏃","💧","📚","🧘","🥗","💊","💪","🎵","🌿","☀️","🛌","✍️","🧠","❤️","🏋️"];
-      const COLORS = ["#8b5cf6","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16"];
+      const COLORS = ["#db2777","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16"];
 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Habit Tracker</h2>
-            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ name:"", emoji:"🌟", color:"#8b5cf6" }); setEditId(null); setModal(true); }}>+ New habit</button>
+            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ name:"", emoji:"🌟", color:"#db2777" }); setEditId(null); setModal(true); }}>+ New habit</button>
           </div>
 
           <div className="lf-card" style={{ overflowX: "auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: `180px repeat(7, 1fr)`, gap: 4, minWidth: 480 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: css.textMuted, padding: "4px 0" }}>Habit</div>
               {last7Days.map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 11, color: d === todayStr ? "#8b5cf6" : css.textMuted, fontWeight: d === todayStr ? 700 : 400, padding: "4px 0" }}>
+                <div key={d} style={{ textAlign: "center", fontSize: 11, color: d === todayStr ? "#db2777" : css.textMuted, fontWeight: d === todayStr ? 700 : 400, padding: "4px 0" }}>
                   {new Date(d+"T00:00").toLocaleDateString("en-US",{weekday:"short"})}<br/>{new Date(d+"T00:00").getDate()}
                 </div>
               ))}
@@ -992,7 +992,7 @@
                     <label style={{ fontSize: 12, color: css.textMuted, display: "block", marginBottom: 6 }}>Choose emoji</label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {EMOJIS.map(em => (
-                        <button key={em} onClick={() => setForm({...form,emoji:em})} style={{ width:36, height:36, borderRadius:8, border:`2px solid ${form.emoji===em?"#8b5cf6":css.border}`, background:"transparent", fontSize:18, cursor:"pointer" }}>{em}</button>
+                        <button key={em} onClick={() => setForm({...form,emoji:em})} style={{ width:36, height:36, borderRadius:8, border:`2px solid ${form.emoji===em?"#db2777":css.border}`, background:"transparent", fontSize:18, cursor:"pointer" }}>{em}</button>
                       ))}
                     </div>
                   </div>
@@ -1063,7 +1063,7 @@
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px,1fr))", gap: 12 }}>
             {[
-              { label: "Days tracked", val: moods.length, color: "#8b5cf6" },
+              { label: "Days tracked", val: moods.length, color: "#db2777" },
               { label: "Avg mood (1-5)", val: avg, color: "#f59e0b" },
               { label: "Today's mood", val: todayMood ? MOODS.find(m=>m.value===todayMood.value)?.icon : "—", color: "#10b981" },
             ].map(s => (
@@ -1160,7 +1160,7 @@
             <div className="lf-card">
               {form.prompt && (
                 <div style={{ background: dark?"#1e1b4b":"#f5f3ff", border:`1px solid ${dark?"#312e81":"#ddd6fe"}`, borderRadius:12, padding:"12px 16px", marginBottom:16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 4 }}>✨ Today's prompt</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 4 }}>✨ Today's prompt</div>
                   <div style={{ fontSize: 14, color: dark?"#c4b5fd":"#6d28d9", fontStyle:"italic" }}>{form.prompt}</div>
                 </div>
               )}
@@ -1176,7 +1176,7 @@
           {view === "list" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ background: dark?"#1e1b4b":"#f5f3ff", border:`1px solid ${dark?"#312e81":"#ddd6fe"}`, borderRadius:14, padding:"16px 20px" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 6 }}>✨ Today's reflection prompt</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 6 }}>✨ Today's reflection prompt</div>
                 <div style={{ fontSize: 15, color: dark?"#c4b5fd":"#6d28d9", fontStyle:"italic", marginBottom: 12 }}>"{prompt}"</div>
                 <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", content:"", date:today(), prompt }); setEditId(null); setView("write"); }} style={{ fontSize: 13 }}>Start writing</button>
               </div>
@@ -1185,7 +1185,7 @@
                 {filtered.length === 0 && <div style={{ gridColumn:"1/-1" }}><EmptyState msg={search ? "No entries found" : "Start writing your first entry"} icon="✍️" css={css} /></div>}
                 {filtered.map(j => (
                   <div key={j.id} className="lf-card" style={{ cursor:"pointer" }} onClick={() => { setForm({...j}); setEditId(j.id); setView("write"); }}>
-                    <div style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600, marginBottom: 4 }}>📅 {fmtFull(j.date)}</div>
+                    <div style={{ fontSize: 11, color: "#db2777", fontWeight: 600, marginBottom: 4 }}>📅 {fmtFull(j.date)}</div>
                     {j.title && <div style={{ fontWeight: 600, color: css.text, marginBottom: 6 }}>{j.title}</div>}
                     {j.prompt && <div style={{ fontSize: 11, fontStyle:"italic", color: css.textMuted, marginBottom: 6 }}>{j.prompt}</div>}
                     <div style={{ fontSize: 13, color: css.textMuted, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", lineHeight:1.6 }}>{j.content}</div>
@@ -1958,9 +1958,9 @@
         .lf-card { background: ${css.card}; border: 1px solid ${css.border}; border-radius: 16px; padding: 20px; transition: box-shadow 0.2s; }
         .lf-card:hover { box-shadow: 0 4px 20px ${dark ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.08)"}; }
         .lf-input { background: ${css.input}; border: 1px solid ${css.border}; color: ${css.text}; border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 14px; }
-        .lf-input:focus { border-color: #8b5cf6; outline: none; }
+        .lf-input:focus { border-color: #db2777; outline: none; }
         .lf-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; }
-        .lf-btn-primary { background: #8b5cf6; color: #fff; }
+        .lf-btn-primary { background: #db2777; color: #fff; }
         .lf-btn-primary:hover { background: #7c3aed; }
         .lf-btn-ghost { background: transparent; color: ${css.textMuted}; border: 1px solid ${css.border}; }
         .lf-btn-ghost:hover { background: ${css.hover}; color: ${css.text}; }
@@ -1972,7 +1972,7 @@
         .modal { background: ${css.card}; border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
         .cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; }
         .cal-day:hover { background: ${css.hover}; }
-        .cal-day.today { background: #8b5cf6; color: #fff; font-weight: 600; }
+        .cal-day.today { background: #db2777; color: #fff; font-weight: 600; }
         .progress-bar { height: 6px; border-radius: 3px; background: ${dark ? "#333" : "#f1f5f9"}; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
         .streak-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }

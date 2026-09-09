@@ -4,7 +4,7 @@ import type { Habit, HabitCompletion } from "@/types/database";
 import { addHabit, updateHabit, deleteHabit, toggleHabitDay } from "./actions";
 
 const EMOJIS = ["🌟", "🏃", "💧", "📚", "🧘", "🥗", "💊", "💪", "🎵", "🌿", "☀️", "🛌", "✍️", "🧠", "❤️", "🏋️"];
-const COLORS = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#06b6d4", "#84cc16"];
+const COLORS = ["#db2777", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#06b6d4", "#84cc16"];
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -84,7 +84,7 @@ export default async function HabitsPage(props: PageProps<"/dashboard/habits">) 
                 type="radio"
                 name="color"
                 value={c}
-                defaultChecked={c === "#8b5cf6"}
+                defaultChecked={c === "#db2777"}
                 style={{ width: 26, height: 26, borderRadius: "50%", accentColor: c, cursor: "pointer" }}
               />
             ))}
@@ -107,7 +107,7 @@ export default async function HabitsPage(props: PageProps<"/dashboard/habits">) 
                 style={{
                   textAlign: "center",
                   fontSize: 11,
-                  color: d === todayStr ? "#8b5cf6" : "var(--muted)",
+                  color: d === todayStr ? "#db2777" : "var(--muted)",
                   fontWeight: d === todayStr ? 700 : 400,
                   padding: "4px 0",
                 }}

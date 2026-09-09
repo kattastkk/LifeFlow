@@ -126,7 +126,7 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
                   )}
                 </div>
                 {evs.slice(0, 2).map((e) => (
-                  <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: "#ede9fe", color: "#8b5cf6", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                  <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: "#ede9fe", color: "#db2777", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
                     {e.title}
                   </div>
                 ))}
@@ -250,7 +250,7 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
         )}
         {[...events].sort((a, b) => (a.event_date > b.event_date ? 1 : -1)).map((e) => (
           <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
-            <div style={{ background: "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
+            <div style={{ background: "#f5f3ff", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
               <div>{e.event_date}</div>
               <div>{e.event_time}</div>
             </div>

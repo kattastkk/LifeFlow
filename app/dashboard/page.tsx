@@ -199,7 +199,7 @@ export default async function DashboardPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
         {[
-          { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#8b5cf6" },
+          { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#db2777" },
           { label: "Habits done", value: `${habitsDoneToday}/${habits.length}`, icon: "🔥", color: "#f59e0b" },
           { label: "Best streak", value: `${maxStreak}d`, icon: "⚡", color: "#ef4444" },
           { label: "Overall progress", value: `${overallProgress}%`, icon: "📈", color: "#10b981" },
@@ -302,7 +302,7 @@ export default async function DashboardPage() {
           {events.length === 0 && <EmptyState msg="No events today" icon="📭" />}
           {events.slice(0, 4).map((e) => (
             <div key={e.id} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ background: "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>
+              <div style={{ background: "#f5f3ff", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>
                 {e.event_time ?? "—"}
               </div>
               <div>
@@ -522,7 +522,7 @@ export default async function DashboardPage() {
           <SectionHeader title="Daily Activity Insights" icon="📊" action="View Calendar" href="/dashboard/calendar" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 12 }}>
             {[
-              { label: "Days archived", val: daysArchived, icon: "📅", color: "#8b5cf6" },
+              { label: "Days archived", val: daysArchived, icon: "📅", color: "#db2777" },
               { label: "Avg completion", val: `${avgRate}%`, icon: "📈", color: "#ec4899" },
               { label: "Prod. streak", val: `${prodStreak}d`, icon: "🔥", color: "#f59e0b" },
               { label: "Done this week", val: doneThisWeek, icon: "⚡", color: "#10b981" },

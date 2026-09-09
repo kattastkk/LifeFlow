@@ -18,7 +18,7 @@ export async function addHabit(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   if (!name) return;
   const emoji = (formData.get("emoji") as string)?.trim() || "🌟";
-  const color = (formData.get("color") as string) || "#8b5cf6";
+  const color = (formData.get("color") as string) || "#db2777";
 
   await supabase.from("habits").insert({ user_id: userId, name, emoji, color });
   revalidatePath("/dashboard/habits");
@@ -31,7 +31,7 @@ export async function updateHabit(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   if (!name) return;
   const emoji = (formData.get("emoji") as string)?.trim() || "🌟";
-  const color = (formData.get("color") as string) || "#8b5cf6";
+  const color = (formData.get("color") as string) || "#db2777";
 
   await supabase.from("habits").update({ name, emoji, color }).eq("id", id).eq("user_id", userId);
   revalidatePath("/dashboard/habits");

@@ -110,7 +110,7 @@ export default async function TodoListPage() {
 
       <form action={addProject} className="lf-card mt-6 flex gap-2">
         <input name="name" placeholder="New project name..." required className="lf-input" />
-        <button type="submit" className="lf-btn lf-btn-primary shrink-0">
+        <button type="submit" className="lf-btn shrink-0 bg-sidebar-active text-white hover:opacity-90">
           + Add Project
         </button>
       </form>
