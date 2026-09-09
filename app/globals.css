@@ -9,8 +9,9 @@
   --border: #e5e7eb;
   --foreground: #171717;
   --muted: #6b7280;
-  --primary: #db2777;
-  --primary-hover: #be185d;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --sidebar-active: #db2777;
 }
 
 .dark {
@@ -20,8 +21,9 @@
   --border: #2d2d4a;
   --foreground: #ededed;
   --muted: #94a3b8;
-  --primary: #db2777;
-  --primary-hover: #be185d;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --sidebar-active: #db2777;
 }
 
 @theme inline {
@@ -33,6 +35,7 @@
   --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-sidebar-active: var(--sidebar-active);
   --font-sans: var(--font-dm-sans);
   --font-display: var(--font-dm-serif);
 }
@@ -42,3 +45,23 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+.lf-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: box-shadow 0.2s; }
+.lf-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.lf-input { background: var(--input); border: 1px solid var(--border); color: var(--foreground); border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 14px; }
+.lf-input:focus { border-color: var(--primary); outline: none; }
+.lf-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; cursor: pointer; border: none; }
+.lf-btn-primary { background: var(--primary); color: #fff; }
+.lf-btn-primary:hover { background: var(--primary-hover); }
+.lf-btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.lf-btn-ghost:hover { background: var(--input); color: var(--foreground); }
+.nav-item { padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; white-space: nowrap; }
+.nav-item.active { background: var(--sidebar-active); color: #fff; }
+.nav-item:not(.active):hover { background: var(--input); }
+.tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; }
+.cal-day:hover { background: var(--input); }
+.cal-day.today { background: var(--primary); color: #fff; font-weight: 600; }
+.progress-bar { height: 6px; border-radius: 3px; background: #f1f5f9; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.streak-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }

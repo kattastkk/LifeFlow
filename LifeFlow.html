@@ -66,7 +66,7 @@
       { id: uid(), title: "Weekly review", desc: "Review goals and plan next week", due: today(), priority: "High", category: "Personal", status: "To Do" },
     ];
     const seedHabits = [
-      { id: uid(), name: "Morning meditation", emoji: "🧘", color: "#db2777", completions: {} },
+      { id: uid(), name: "Morning meditation", emoji: "🧘", color: "#8b5cf6", completions: {} },
       { id: uid(), name: "Drink 8 glasses of water", emoji: "💧", color: "#3b82f6", completions: {} },
       { id: uid(), name: "Read for 20 minutes", emoji: "📚", color: "#10b981", completions: {} },
       { id: uid(), name: "Exercise", emoji: "🏃", color: "#f59e0b", completions: {} },
@@ -104,7 +104,7 @@
       input:    "#0f0f1a",
       text:     "#e2e8f0",
       textMuted:"#94a3b8",
-      border:   "#4a1c2e",
+      border:   "#2d2d4a",
       hover:    "#252540",
     };
 
@@ -168,15 +168,15 @@
               <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, color: css.text }}>Good {getTimeOfDay()} ✨</h1>
               <p style={{ color: css.textMuted, marginTop: 4 }}>{fmtFull(todayStr)}</p>
             </div>
-            <div style={{ background: dark ? "#2d0a1e" : "#fff0f6", border: `1px solid ${dark ? "#831843" : "#fbcfe8"}`, borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>
-              <p style={{ fontSize: 14, fontStyle: "italic", color: dark ? "#fbb6ce" : "#9d174d", lineHeight: 1.5 }}>"{quote.text}"</p>
+            <div style={{ background: dark ? "#1e1b4b" : "#f5f3ff", border: `1px solid ${dark ? "#312e81" : "#ddd6fe"}`, borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>
+              <p style={{ fontSize: 14, fontStyle: "italic", color: dark ? "#c4b5fd" : "#6d28d9", lineHeight: 1.5 }}>"{quote.text}"</p>
               <p style={{ fontSize: 12, color: css.textMuted, marginTop: 6 }}>— {quote.author}</p>
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
             {[
-              { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#db2777" },
+              { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#8b5cf6" },
               { label: "Habits done", value: `${habitsDoneToday}/${habits.length}`, icon: "🔥", color: "#f59e0b" },
               { label: "Best streak", value: `${maxStreak}d`, icon: "⚡", color: "#ef4444" },
               { label: "Overall progress", value: `${totalTasks ? Math.round(completedTotal/totalTasks*100) : 0}%`, icon: "📈", color: "#10b981" },
@@ -210,7 +210,7 @@
               const pct = total ? Math.round(done / total * 100) : 0;
               const sorted = [...todayItems].sort((a,b) => a.completed - b.completed);
               return (
-                <div className="lf-card" style={{ background: dark ? "#1a1a2e" : "#fff", border: `1px solid ${dark ? "#3d2a4a" : "#fce7f3"}` }}>
+                <div className="lf-card" style={{ background: dark ? "#1a1a2e" : "#fff", border: `1px solid ${dark ? "#3d2a4a" : "#f3e8ff"}` }}>
                   <SectionHeader title="To Do Today" icon="☀️" action="Open" onAction={() => setTab("today")} css={css} />
                   {total > 0 && (
                     <div style={{ marginBottom: 12 }}>
@@ -219,7 +219,7 @@
                         <span style={{ fontSize: 12, fontWeight: 600, color: "#ec4899" }}>{pct}%</span>
                       </div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #ec4899, #ec4899)" }} />
+                        <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #ec4899, #a855f7)" }} />
                       </div>
                     </div>
                   )}
@@ -243,7 +243,7 @@
               {todayEvents.length === 0 && <EmptyState msg="No events today" icon="📭" css={css} />}
               {todayEvents.slice(0, 4).map(e => (
                 <div key={e.id} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: `1px solid ${css.border}` }}>
-                  <div style={{ background: dark ? "#831843" : "#fff0f6", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>{e.time}</div>
+                  <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>{e.time}</div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 500, color: css.text }}>{e.title}</div>
                     {e.desc && <div style={{ fontSize: 12, color: css.textMuted }}>{e.desc}</div>}
@@ -301,7 +301,7 @@
                 <div className="lf-card" style={{ border: `1px solid ${dark ? "#1e3a5f" : "#e0f2fe"}` }}>
                   <SectionHeader title="To Do List" icon="📝" action="Open" onAction={() => setTab("todo")} css={css} />
                   <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                    {[{l:"Total",v:total,c:"#3b82f6"},{l:"Done",v:done,c:"#10b981"},{l:"Left",v:total-done,c:"#ec4899"}].map(s=>(
+                    {[{l:"Total",v:total,c:"#3b82f6"},{l:"Done",v:done,c:"#10b981"},{l:"Left",v:total-done,c:"#6366f1"}].map(s=>(
                       <div key={s.l} style={{ flex:1, textAlign:"center", background: dark?"#0f2040":"#f0f9ff", borderRadius:10, padding:"8px 4px" }}>
                         <div style={{ fontWeight:700, fontSize:18, color:s.c }}>{s.v}</div>
                         <div style={{ fontSize:10, color:css.textMuted }}>{s.l}</div>
@@ -315,7 +315,7 @@
                         <span style={{ fontSize:11, fontWeight:700, color:"#3b82f6" }}>{pct}%</span>
                       </div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{ width:`${pct}%`, background:"linear-gradient(90deg,#60a5fa,#f472b6)" }} />
+                        <div className="progress-fill" style={{ width:`${pct}%`, background:"linear-gradient(90deg,#60a5fa,#818cf8)" }} />
                       </div>
                     </div>
                   )}
@@ -337,12 +337,12 @@
               const total = wantItems.length;
               const active = [...wantItems].filter(i => !i.completed).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
               const recent = [...wantItems].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0,2);
-              const CATCOLORS = { Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#f472b6", Career:"#3b82f6", "Personal Growth":"#10b981", Fun:"#f97316", Other:"#94a3b8" };
+              const CATCOLORS = { Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#a78bfa", Career:"#3b82f6", "Personal Growth":"#10b981", Fun:"#f97316", Other:"#94a3b8" };
               return (
                 <div className="lf-card" style={{ border: `1px solid ${dark ? "#3d1a1a" : "#fce7f3"}` }}>
                   <SectionHeader title="Want To Do" icon="🌟" action="Open" onAction={() => setTab("wantodo")} css={css} />
                   <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                    {[{l:"Goals",v:total,c:"#f472b6"},{l:"Achieved",v:done,c:"#fb923c"},{l:"Dreaming",v:total-done,c:"#f9a8d4"}].map(s=>(
+                    {[{l:"Goals",v:total,c:"#f472b6"},{l:"Achieved",v:done,c:"#fb923c"},{l:"Dreaming",v:total-done,c:"#c084fc"}].map(s=>(
                       <div key={s.l} style={{ flex:1, textAlign:"center", background: dark?"#2d1020":"#fdf2f8", borderRadius:10, padding:"8px 4px" }}>
                         <div style={{ fontWeight:700, fontSize:18, color:s.c }}>{s.v}</div>
                         <div style={{ fontSize:10, color:css.textMuted }}>{s.l}</div>
@@ -378,9 +378,9 @@
               const yest = new Date(); yest.setDate(yest.getDate()-1);
               const yestStr = yest.toISOString().slice(0,10);
               const record = dailyHistory.find(h => h.date === yestStr);
-              const lavSoft  = dark ? "#2d0a1e" : "#fff5f8";
-              const lavBorder= dark ? "#9d174d" : "#fbcfe8";
-              const lavText  = dark ? "#fbb6ce" : "#be185d";
+              const lavSoft  = dark ? "#1e1b38" : "#faf5ff";
+              const lavBorder= dark ? "#4c1d95" : "#e9d5ff";
+              const lavText  = dark ? "#c4b5fd" : "#7c3aed";
               return (
                 <div className="lf-card" style={{ background: lavSoft, border: `1px solid ${lavBorder}` }}>
                   <SectionHeader title="Yesterday's Reflection" icon="📖" action="View Calendar" onAction={() => setTab("calendar")} css={css} />
@@ -389,7 +389,7 @@
                   ) : (
                     <div>
                       <div style={{ display:"flex", gap:12, marginBottom:14 }}>
-                        <div style={{ flex:1, textAlign:"center", background: dark?"#3d0a1e":"#fce7f3", borderRadius:10, padding:"10px 6px" }}>
+                        <div style={{ flex:1, textAlign:"center", background: dark?"#2d1b4a":"#ede9fe", borderRadius:10, padding:"10px 6px" }}>
                           <div style={{ fontWeight:700, fontSize:22, color:lavText }}>{record.completionRate}%</div>
                           <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>Completion</div>
                         </div>
@@ -433,19 +433,19 @@
             let streak = 0, d2 = new Date(now);
             d2.setDate(d2.getDate()-1);
             while(true){const k=d2.toISOString().slice(0,10);if(!dailyHistory.find(h=>h.date===k))break;streak++;d2.setDate(d2.getDate()-1);}
-            const lavText  = dark ? "#fbb6ce" : "#be185d";
+            const lavText  = dark ? "#c4b5fd" : "#7c3aed";
             return (
-              <div className="lf-card" style={{ background: dark?"#2d0a1e":"#fff5f8", border:`1px solid ${dark?"#9d174d":"#fbcfe8"}` }}>
+              <div className="lf-card" style={{ background: dark?"#16102a":"#faf5ff", border:`1px solid ${dark?"#4c1d95":"#e9d5ff"}` }}>
                 <SectionHeader title="Daily Activity Insights" icon="📊" action="View Calendar" onAction={() => setTab("calendar")} css={css} />
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:12 }}>
                   {[
-                    { label:"Days archived", val:dailyHistory.length, icon:"📅", color:"#db2777" },
+                    { label:"Days archived", val:dailyHistory.length, icon:"📅", color:"#8b5cf6" },
                     { label:"Avg completion", val:`${avgRate}%`, icon:"📈", color:"#ec4899" },
                     { label:"Prod. streak", val:`${streak}d`, icon:"🔥", color:"#f59e0b" },
                     { label:"Done this week", val:weekDone, icon:"⚡", color:"#10b981" },
                     { label:"Done this month", val:monthDone, icon:"🗓", color:"#3b82f6" },
                   ].map(s => (
-                    <div key={s.label} style={{ textAlign:"center", background:dark?"#2d0a1e":"#fff", borderRadius:12, padding:"14px 8px", border:`1px solid ${dark?"#4a1c2e":"#fce7f3"}` }}>
+                    <div key={s.label} style={{ textAlign:"center", background:dark?"#1e1830":"#fff", borderRadius:12, padding:"14px 8px", border:`1px solid ${dark?"#2d2d4a":"#f3e8ff"}` }}>
                       <div style={{ fontSize:20 }}>{s.icon}</div>
                       <div style={{ fontSize:22, fontWeight:700, color:s.color, marginTop:4 }}>{s.val}</div>
                       <div style={{ fontSize:10, color:css.textMuted, marginTop:2, lineHeight:1.3 }}>{s.label}</div>
@@ -475,10 +475,10 @@
                 <div key={k} style={{ borderLeft: `1px solid ${css.border}`, padding: "8px 8px" }}>
                   <div style={{ textAlign: "center", marginBottom: 8 }}>
                     <div style={{ fontSize: 11, color: css.textMuted }}>{DAYS_SHORT[d.getDay()]}</div>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: isToday ? "#db2777" : "transparent", color: isToday ? "#fff" : css.text, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: isToday ? 600 : 400, margin: "4px auto 0" }}>{d.getDate()}</div>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: isToday ? "#8b5cf6" : "transparent", color: isToday ? "#fff" : css.text, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: isToday ? 600 : 400, margin: "4px auto 0" }}>{d.getDate()}</div>
                   </div>
                   {dayEvents.map(e => (
-                    <div key={e.id} style={{ background: dark ? "#831843" : "#fce7f3", color: "#be185d", borderRadius: 6, padding: "4px 8px", fontSize: 11, marginBottom: 4, cursor: "pointer" }} onClick={() => onEdit(e)}>
+                    <div key={e.id} style={{ background: dark ? "#312e81" : "#ede9fe", color: "#7c3aed", borderRadius: 6, padding: "4px 8px", fontSize: 11, marginBottom: 4, cursor: "pointer" }} onClick={() => onEdit(e)}>
                       <div style={{ fontWeight: 600 }}>{e.time}</div>
                       <div>{e.title}</div>
                     </div>
@@ -526,9 +526,9 @@
       const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y-1); } else setMonth(m => m-1); };
       const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y+1); } else setMonth(m => m+1); };
 
-      const lavSoft   = dark ? "#2d0a1e" : "#fff5f8";
-      const lavBorder = dark ? "#9d174d" : "#fbcfe8";
-      const lavText   = dark ? "#fbb6ce" : "#be185d";
+      const lavSoft   = dark ? "#1e1b38" : "#faf5ff";
+      const lavBorder = dark ? "#4c1d95" : "#e9d5ff";
+      const lavText   = dark ? "#c4b5fd" : "#7c3aed";
       const pinkCol   = "#ec4899";
 
       return (
@@ -569,7 +569,7 @@
                   const hist = historyForDay(d);
                   const dateKey = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
                   return (
-                    <div key={d} style={{ minHeight: 72, padding: "4px 2px", borderRadius: 8, background: hist ? (dark?"#1e1b30":"#fff5f8") : "transparent", cursor: hist ? "pointer" : "default" }}
+                    <div key={d} style={{ minHeight: 72, padding: "4px 2px", borderRadius: 8, background: hist ? (dark?"#1e1b30":"#faf5ff") : "transparent", cursor: hist ? "pointer" : "default" }}
                       onClick={() => hist && setHistoryModal(dateKey)}>
                       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:2, paddingRight:2 }}>
                         <div className={`cal-day${isToday ? " today" : ""}`} style={{ width: 32, height: 32 }}>{d}</div>
@@ -581,7 +581,7 @@
                         )}
                       </div>
                       {evs.slice(0, 2).map(e => (
-                        <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: dark ? "#831843" : "#fce7f3", color: "#db2777", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" }}
+                        <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: dark ? "#312e81" : "#ede9fe", color: "#8b5cf6", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" }}
                           onClick={(ev) => { ev.stopPropagation(); setForm({...e}); setModal("edit"); }}>{e.title}</div>
                       ))}
                       {evs.length > 2 && <div style={{ fontSize: 10, color: css.textMuted, paddingLeft: 6 }}>+{evs.length-2}</div>}
@@ -605,8 +605,8 @@
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                 {[...dailyHistory].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10).map(h => (
                   <div key={h.date} onClick={() => setHistoryModal(h.date)}
-                    style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", background:dark?"#2d0a1e":"#fff", borderRadius:12, cursor:"pointer", border:`1px solid ${dark?"#4a1c2e":"#fce7f3"}` }}>
-                    <div style={{ width:42, height:42, borderRadius:12, background: h.completionRate===100?"#d1fae5":(dark?"#3d0a1e":"#fce7f3"), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px", background:dark?"#1a1830":"#fff", borderRadius:12, cursor:"pointer", border:`1px solid ${dark?"#2d2d4a":"#f3e8ff"}` }}>
+                    <div style={{ width:42, height:42, borderRadius:12, background: h.completionRate===100?"#d1fae5":(dark?"#2d1b4a":"#ede9fe"), display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                       <div style={{ fontSize:11, fontWeight:700, color: h.completionRate===100?"#059669":lavText }}>{h.completionRate}%</div>
                       <div style={{ fontSize:9, color:css.textMuted }}>{h.completedCount}/{h.totalCount}</div>
                     </div>
@@ -630,7 +630,7 @@
             {events.length === 0 && <EmptyState msg="No events yet" icon="📭" css={css} />}
             {[...events].sort((a,b) => a.date > b.date ? 1 : -1).map(e => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${css.border}` }}>
-                <div style={{ background: dark ? "#831843" : "#fff0f6", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
+                <div style={{ background: dark ? "#312e81" : "#f5f3ff", color: "#8b5cf6", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center" }}>
                   <div>{fmt(e.date)}</div><div>{e.time}</div>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -677,10 +677,10 @@
             const pendItems = record.items.filter(i=>!i.completed);
             return (
               <div className="modal-overlay" onClick={() => setHistoryModal(null)}>
-                <div className="modal" onClick={e => e.stopPropagation()} style={{ background: dark?"#2d0a1e":"#fff", maxWidth:520 }}>
+                <div className="modal" onClick={e => e.stopPropagation()} style={{ background: dark?"#1a1830":"#fff", maxWidth:520 }}>
                   {/* Header */}
                   <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-                    <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#f9a8d4,#ec4899)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>📖</div>
+                    <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#c084fc,#ec4899)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>📖</div>
                     <div>
                       <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, fontWeight:400, color:css.text }}>{fmtFull(record.date)}</div>
                       <div style={{ fontSize:12, color:lavText, marginTop:2 }}>Daily History Log</div>
@@ -695,7 +695,7 @@
                       { l:"Done", v:record.completedCount, c:"#ec4899" },
                       { l:"Total", v:record.totalCount, c:css.textMuted },
                     ].map(s => (
-                      <div key={s.l} style={{ flex:1, textAlign:"center", background:dark?"#3d0a1e":"#fff5f8", borderRadius:12, padding:"10px 6px", border:`1px solid ${lavBorder}` }}>
+                      <div key={s.l} style={{ flex:1, textAlign:"center", background:dark?"#2d1b4a":"#faf5ff", borderRadius:12, padding:"10px 6px", border:`1px solid ${lavBorder}` }}>
                         <div style={{ fontSize:20, fontWeight:700, color:s.c }}>{s.v}</div>
                         <div style={{ fontSize:10, color:css.textMuted, marginTop:2 }}>{s.l}</div>
                       </div>
@@ -704,8 +704,8 @@
 
                   {/* Progress bar */}
                   <div style={{ marginBottom:20 }}>
-                    <div style={{ height:8, borderRadius:4, background:dark?"#4a1c2e":"#fce7f3", overflow:"hidden" }}>
-                      <div style={{ height:"100%", borderRadius:4, background:"linear-gradient(90deg,#ec4899,#ec4899)", width:`${record.completionRate}%` }} />
+                    <div style={{ height:8, borderRadius:4, background:dark?"#2d2d4a":"#f3e8ff", overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:4, background:"linear-gradient(90deg,#ec4899,#a855f7)", width:`${record.completionRate}%` }} />
                     </div>
                   </div>
 
@@ -713,7 +713,7 @@
                   <div style={{ fontSize:11, fontWeight:700, color:css.textMuted, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:10 }}>Today's Log</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:0, maxHeight:320, overflowY:"auto" }}>
                     {doneItems.map(item => (
-                      <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderBottom:`1px solid ${css.border}`, background:dark?"#2d0a1e":"#fdf2f8", borderRadius:8, marginBottom:3 }}>
+                      <div key={item.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderBottom:`1px solid ${css.border}`, background:dark?"#1e1830":"#fdf2f8", borderRadius:8, marginBottom:3 }}>
                         <div style={{ width:20, height:20, borderRadius:"50%", background:"#ec4899", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                           <span style={{ color:"#fff", fontSize:11, lineHeight:1 }}>✓</span>
                         </div>
@@ -779,7 +779,7 @@
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
             {[
-              { label: "Total", val: tasks.length, color: "#db2777" },
+              { label: "Total", val: tasks.length, color: "#8b5cf6" },
               { label: "Completed", val: completed, color: "#10b981" },
               { label: "In progress", val: inProg, color: "#f59e0b" },
               { label: "Completion rate", val: `${pct}%`, color: "#3b82f6" },
@@ -794,10 +794,10 @@
           <div className="lf-card">
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: css.text }}>Overall completion</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#db2777" }}>{pct}%</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#8b5cf6" }}>{pct}%</span>
             </div>
             <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #db2777, #ec4899)" }} />
+              <div className="progress-fill" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #8b5cf6, #ec4899)" }} />
             </div>
           </div>
 
@@ -872,7 +872,7 @@
 
     function Habits({ habits, setHabits, css, dark }) {
       const [modal, setModal] = useState(false);
-      const [form, setForm] = useState({ name:"", emoji:"🌟", color:"#db2777" });
+      const [form, setForm] = useState({ name:"", emoji:"🌟", color:"#8b5cf6" });
       const [editId, setEditId] = useState(null);
       const todayStr = today();
 
@@ -905,24 +905,24 @@
         if (editId) { setHabits(habits.map(h => h.id === editId ? { ...h, ...form } : h)); }
         else { setHabits([...habits, { ...form, id: uid(), completions: {} }]); }
         setModal(false); setEditId(null);
-        setForm({ name:"", emoji:"🌟", color:"#db2777" });
+        setForm({ name:"", emoji:"🌟", color:"#8b5cf6" });
       };
 
       const EMOJIS = ["🌟","🏃","💧","📚","🧘","🥗","💊","💪","🎵","🌿","☀️","🛌","✍️","🧠","❤️","🏋️"];
-      const COLORS = ["#db2777","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16"];
+      const COLORS = ["#8b5cf6","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16"];
 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: css.text }}>Habit Tracker</h2>
-            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ name:"", emoji:"🌟", color:"#db2777" }); setEditId(null); setModal(true); }}>+ New habit</button>
+            <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ name:"", emoji:"🌟", color:"#8b5cf6" }); setEditId(null); setModal(true); }}>+ New habit</button>
           </div>
 
           <div className="lf-card" style={{ overflowX: "auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: `180px repeat(7, 1fr)`, gap: 4, minWidth: 480 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: css.textMuted, padding: "4px 0" }}>Habit</div>
               {last7Days.map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 11, color: d === todayStr ? "#db2777" : css.textMuted, fontWeight: d === todayStr ? 700 : 400, padding: "4px 0" }}>
+                <div key={d} style={{ textAlign: "center", fontSize: 11, color: d === todayStr ? "#8b5cf6" : css.textMuted, fontWeight: d === todayStr ? 700 : 400, padding: "4px 0" }}>
                   {new Date(d+"T00:00").toLocaleDateString("en-US",{weekday:"short"})}<br/>{new Date(d+"T00:00").getDate()}
                 </div>
               ))}
@@ -992,7 +992,7 @@
                     <label style={{ fontSize: 12, color: css.textMuted, display: "block", marginBottom: 6 }}>Choose emoji</label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {EMOJIS.map(em => (
-                        <button key={em} onClick={() => setForm({...form,emoji:em})} style={{ width:36, height:36, borderRadius:8, border:`2px solid ${form.emoji===em?"#db2777":css.border}`, background:"transparent", fontSize:18, cursor:"pointer" }}>{em}</button>
+                        <button key={em} onClick={() => setForm({...form,emoji:em})} style={{ width:36, height:36, borderRadius:8, border:`2px solid ${form.emoji===em?"#8b5cf6":css.border}`, background:"transparent", fontSize:18, cursor:"pointer" }}>{em}</button>
                       ))}
                     </div>
                   </div>
@@ -1063,7 +1063,7 @@
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px,1fr))", gap: 12 }}>
             {[
-              { label: "Days tracked", val: moods.length, color: "#db2777" },
+              { label: "Days tracked", val: moods.length, color: "#8b5cf6" },
               { label: "Avg mood (1-5)", val: avg, color: "#f59e0b" },
               { label: "Today's mood", val: todayMood ? MOODS.find(m=>m.value===todayMood.value)?.icon : "—", color: "#10b981" },
             ].map(s => (
@@ -1159,9 +1159,9 @@
           {view === "write" && (
             <div className="lf-card">
               {form.prompt && (
-                <div style={{ background: dark?"#2d0a1e":"#fff0f6", border:`1px solid ${dark?"#831843":"#fbcfe8"}`, borderRadius:12, padding:"12px 16px", marginBottom:16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 4 }}>✨ Today's prompt</div>
-                  <div style={{ fontSize: 14, color: dark?"#fbb6ce":"#9d174d", fontStyle:"italic" }}>{form.prompt}</div>
+                <div style={{ background: dark?"#1e1b4b":"#f5f3ff", border:`1px solid ${dark?"#312e81":"#ddd6fe"}`, borderRadius:12, padding:"12px 16px", marginBottom:16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 4 }}>✨ Today's prompt</div>
+                  <div style={{ fontSize: 14, color: dark?"#c4b5fd":"#6d28d9", fontStyle:"italic" }}>{form.prompt}</div>
                 </div>
               )}
               <input className="lf-input" placeholder="Entry title (optional)" value={form.title} onChange={e => setForm({...form,title:e.target.value})} style={{ marginBottom: 12, fontSize: 16 }} />
@@ -1175,9 +1175,9 @@
 
           {view === "list" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ background: dark?"#2d0a1e":"#fff0f6", border:`1px solid ${dark?"#831843":"#fbcfe8"}`, borderRadius:14, padding:"16px 20px" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#db2777", marginBottom: 6 }}>✨ Today's reflection prompt</div>
-                <div style={{ fontSize: 15, color: dark?"#fbb6ce":"#9d174d", fontStyle:"italic", marginBottom: 12 }}>"{prompt}"</div>
+              <div style={{ background: dark?"#1e1b4b":"#f5f3ff", border:`1px solid ${dark?"#312e81":"#ddd6fe"}`, borderRadius:14, padding:"16px 20px" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#8b5cf6", marginBottom: 6 }}>✨ Today's reflection prompt</div>
+                <div style={{ fontSize: 15, color: dark?"#c4b5fd":"#6d28d9", fontStyle:"italic", marginBottom: 12 }}>"{prompt}"</div>
                 <button className="lf-btn lf-btn-primary" onClick={() => { setForm({ title:"", content:"", date:today(), prompt }); setEditId(null); setView("write"); }} style={{ fontSize: 13 }}>Start writing</button>
               </div>
               <input className="lf-input" placeholder="🔍 Search entries..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -1185,7 +1185,7 @@
                 {filtered.length === 0 && <div style={{ gridColumn:"1/-1" }}><EmptyState msg={search ? "No entries found" : "Start writing your first entry"} icon="✍️" css={css} /></div>}
                 {filtered.map(j => (
                   <div key={j.id} className="lf-card" style={{ cursor:"pointer" }} onClick={() => { setForm({...j}); setEditId(j.id); setView("write"); }}>
-                    <div style={{ fontSize: 11, color: "#db2777", fontWeight: 600, marginBottom: 4 }}>📅 {fmtFull(j.date)}</div>
+                    <div style={{ fontSize: 11, color: "#8b5cf6", fontWeight: 600, marginBottom: 4 }}>📅 {fmtFull(j.date)}</div>
                     {j.title && <div style={{ fontWeight: 600, color: css.text, marginBottom: 6 }}>{j.title}</div>}
                     {j.prompt && <div style={{ fontSize: 11, fontStyle:"italic", color: css.textMuted, marginBottom: 6 }}>{j.prompt}</div>}
                     <div style={{ fontSize: 13, color: css.textMuted, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", lineHeight:1.6 }}>{j.content}</div>
@@ -1257,8 +1257,8 @@
       const blueSoft  = dark ? "#0c1a35" : "#eff6ff";
       const blueBorder= dark ? "#1e3a5f" : "#bfdbfe";
       const blueText  = dark ? "#93c5fd" : "#1d4ed8";
-      const lavSoft   = dark ? "#1a1535" : "#fff0f6";
-      const lavBorder = dark ? "#831843" : "#fce7f3";
+      const lavSoft   = dark ? "#1a1535" : "#f5f3ff";
+      const lavBorder = dark ? "#312e81" : "#e0e7ff";
 
       return (
         <div style={{ display:"flex", gap:20, maxWidth:940, margin:"0 auto", alignItems:"flex-start" }}>
@@ -1294,7 +1294,7 @@
 
           {/* Header */}
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <div style={{ width:48, height:48, borderRadius:16, background:"linear-gradient(135deg,#93c5fd,#f472b6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{selectedProject === "inbox" ? "📥" : (activeProject?.emoji || "📝")}</div>
+            <div style={{ width:48, height:48, borderRadius:16, background:"linear-gradient(135deg,#93c5fd,#818cf8)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{selectedProject === "inbox" ? "📥" : (activeProject?.emoji || "📝")}</div>
             <div>
               <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, fontWeight:400, color:css.text, lineHeight:1 }}>{selectedProject === "inbox" ? "Inbox" : (activeProject?.name || "To Do List")}</h2>
               <p style={{ fontSize:13, color:css.textMuted, marginTop:4 }}>Small things that help keep life organized.</p>
@@ -1304,7 +1304,7 @@
           {/* Stats */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
             {[
-              { label:"Total",     val:total,     icon:"📋", grad:"linear-gradient(135deg,#f472b6,#ec4899)" },
+              { label:"Total",     val:total,     icon:"📋", grad:"linear-gradient(135deg,#818cf8,#6366f1)" },
               { label:"Completed", val:done,      icon:"✅", grad:"linear-gradient(135deg,#34d399,#059669)" },
               { label:"Remaining", val:remaining, icon:"⏳", grad:"linear-gradient(135deg,#93c5fd,#3b82f6)" },
             ].map(s => (
@@ -1322,10 +1322,10 @@
             <div className="lf-card" style={{ padding:"16px 20px" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
                 <span style={{ fontSize:14, fontWeight:600, color:css.text }}>Completion progress</span>
-                <span style={{ fontSize:20, fontWeight:700, background:"linear-gradient(90deg,#3b82f6,#f472b6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{pct}%</span>
+                <span style={{ fontSize:20, fontWeight:700, background:"linear-gradient(90deg,#3b82f6,#818cf8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{pct}%</span>
               </div>
-              <div style={{ height:10, borderRadius:5, background:dark?"#1e293b":"#fce7f3", overflow:"hidden" }}>
-                <div style={{ height:"100%", borderRadius:5, background:"linear-gradient(90deg,#60a5fa,#f472b6)", width:`${pct}%`, transition:"width 0.5s ease" }} />
+              <div style={{ height:10, borderRadius:5, background:dark?"#1e293b":"#e0e7ff", overflow:"hidden" }}>
+                <div style={{ height:"100%", borderRadius:5, background:"linear-gradient(90deg,#60a5fa,#818cf8)", width:`${pct}%`, transition:"width 0.5s ease" }} />
               </div>
               {pct===100 && <div style={{ marginTop:10, fontSize:13, color:blueText, textAlign:"center", fontWeight:500 }}>🎉 All items checked — great job!</div>}
             </div>
@@ -1343,7 +1343,7 @@
                 onKeyDown={e => e.key==="Enter" && addItem()}
                 style={{ flex:1, background:dark?"#0a1525":"#fff", borderColor:blueBorder }}
               />
-              <button onClick={addItem} style={{ padding:"10px 20px", borderRadius:10, background:"linear-gradient(135deg,#3b82f6,#ec4899)", color:"#fff", fontWeight:600, fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>
+              <button onClick={addItem} style={{ padding:"10px 20px", borderRadius:10, background:"linear-gradient(135deg,#3b82f6,#6366f1)", color:"#fff", fontWeight:600, fontSize:14, border:"none", cursor:"pointer", flexShrink:0 }}>
                 + Add
               </button>
             </div>
@@ -1422,11 +1422,11 @@
     // ── Want To Do Page ──────────────────────────────────────────────────────
     const WANT_CATS = ["Learning","Travel","Hobby","Career","Personal Growth","Fun","Other"];
     const WANT_CAT_COLORS = {
-      Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#f472b6",
+      Learning:"#f59e0b", Travel:"#06b6d4", Hobby:"#a78bfa",
       Career:"#3b82f6", "Personal Growth":"#10b981", Fun:"#f97316", Other:"#94a3b8"
     };
     const WANT_CAT_BG_LIGHT = {
-      Learning:"#fffbeb", Travel:"#ecfeff", Hobby:"#fff0f6",
+      Learning:"#fffbeb", Travel:"#ecfeff", Hobby:"#f5f3ff",
       Career:"#eff6ff", "Personal Growth":"#f0fdf4", Fun:"#fff7ed", Other:"#f8fafc"
     };
     const WANT_CAT_BG_DARK = {
@@ -1497,7 +1497,7 @@
             {[
               { label:"Total goals",   val:total,      icon:"🌟", grad:"linear-gradient(135deg,#f9a8d4,#f472b6)" },
               { label:"Achieved",      val:done,       icon:"🏆", grad:"linear-gradient(135deg,#fcd34d,#fb923c)" },
-              { label:"Still dreaming",val:total-done, icon:"💭", grad:"linear-gradient(135deg,#fbb6ce,#f472b6)" },
+              { label:"Still dreaming",val:total-done, icon:"💭", grad:"linear-gradient(135deg,#c4b5fd,#a78bfa)" },
               { label:"Completion",    val:`${pct}%`,  icon:"📊", grad:"linear-gradient(135deg,#86efac,#10b981)" },
             ].map(s => (
               <div key={s.label} className="lf-card" style={{ textAlign:"center", padding:"16px 12px", position:"relative", overflow:"hidden" }}>
@@ -1711,9 +1711,9 @@
       const accentSoft  = dark ? "#4a1942" : "#fdf2f8";
       const accentBorder= dark ? "#6d2460" : "#fbcfe8";
       const accentText  = dark ? "#f9a8d4" : "#be185d";
-      const lavSoft     = dark ? "#3d0a1e" : "#fff5f8";
-      const lavBorder   = dark ? "#be185d" : "#fbcfe8";
-      const lavText     = dark ? "#fbb6ce" : "#be185d";
+      const lavSoft     = dark ? "#2d1b4a" : "#faf5ff";
+      const lavBorder   = dark ? "#5b21b6" : "#e9d5ff";
+      const lavText     = dark ? "#c4b5fd" : "#7c3aed";
 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 680, margin: "0 auto" }}>
@@ -1722,7 +1722,7 @@
           <div>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap:"wrap" }}>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #f9a8d4, #f9a8d4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>☀️</div>
+                <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #f9a8d4, #c084fc)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>☀️</div>
                 <div>
                   <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: css.text, lineHeight: 1 }}>Today's Plan</h2>
                   <p style={{ fontSize: 13, color: css.textMuted, marginTop: 4 }}>
@@ -1734,7 +1734,7 @@
               <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
                 <button
                   onClick={endDay}
-                  style={{ padding:"10px 18px", borderRadius:12, background: alreadyArchived ? (dark?"#3d0a1e":"#fce7f3") : "linear-gradient(135deg,#f472b6,#ec4899)", color: alreadyArchived ? lavText : "#fff", fontWeight:600, fontSize:13, border: alreadyArchived?`1px solid ${lavBorder}`:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:7, whiteSpace:"nowrap" }}
+                  style={{ padding:"10px 18px", borderRadius:12, background: alreadyArchived ? (dark?"#2d1b4a":"#ede9fe") : "linear-gradient(135deg,#818cf8,#6366f1)", color: alreadyArchived ? lavText : "#fff", fontWeight:600, fontSize:13, border: alreadyArchived?`1px solid ${lavBorder}`:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:7, whiteSpace:"nowrap" }}
                 >
                   🌙 {alreadyArchived ? "Re-archive Today" : "End Today"}
                 </button>
@@ -1748,7 +1748,7 @@
               </div>
             )}
             {endMsg === "updated" && (
-              <div style={{ marginTop:12, padding:"12px 16px", background: dark?"#2d0a1e":"#fce7f3", border:`1px solid ${lavBorder}`, borderRadius:12, fontSize:13, color:lavText, display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ marginTop:12, padding:"12px 16px", background: dark?"#1e1b38":"#ede9fe", border:`1px solid ${lavBorder}`, borderRadius:12, fontSize:13, color:lavText, display:"flex", alignItems:"center", gap:8 }}>
                 💜 <strong>Archive updated.</strong> Today's log has been refreshed with your latest progress.
               </div>
             )}
@@ -1762,7 +1762,7 @@
           {/* Stats row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[
-              { label: "Total", val: total, icon: "📋", grad: "linear-gradient(135deg, #f472b6, #be185d)" },
+              { label: "Total", val: total, icon: "📋", grad: "linear-gradient(135deg, #a78bfa, #7c3aed)" },
               { label: "Completed", val: done, icon: "✅", grad: "linear-gradient(135deg, #34d399, #059669)" },
               { label: "Remaining", val: remaining, icon: "⏳", grad: "linear-gradient(135deg, #f9a8d4, #ec4899)" },
             ].map(s => (
@@ -1780,10 +1780,10 @@
             <div className="lf-card" style={{ padding: "16px 20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: css.text }}>Daily progress</span>
-                <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,#ec4899,#ec4899)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{pct}%</span>
+                <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,#ec4899,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{pct}%</span>
               </div>
-              <div style={{ height: 10, borderRadius: 5, background: dark ? "#4a1c2e" : "#fce7f3", overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg, #ec4899, #ec4899)", width: `${pct}%`, transition: "width 0.5s ease" }} />
+              <div style={{ height: 10, borderRadius: 5, background: dark ? "#2d2d4a" : "#f3e8ff", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg, #ec4899, #a855f7)", width: `${pct}%`, transition: "width 0.5s ease" }} />
               </div>
               {allDone && (
                 <div style={{ marginTop: 10, fontSize: 13, color: accentText, textAlign: "center", fontWeight: 500 }}>
@@ -1807,7 +1807,7 @@
               />
               <button
                 onClick={addItem}
-                style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #ec4899, #ec4899)", color: "#fff", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #ec4899, #a855f7)", color: "#fff", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
               >
                 + Add
               </button>
@@ -1958,10 +1958,10 @@
         .lf-card { background: ${css.card}; border: 1px solid ${css.border}; border-radius: 16px; padding: 20px; transition: box-shadow 0.2s; }
         .lf-card:hover { box-shadow: 0 4px 20px ${dark ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.08)"}; }
         .lf-input { background: ${css.input}; border: 1px solid ${css.border}; color: ${css.text}; border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 14px; }
-        .lf-input:focus { border-color: #db2777; outline: none; }
+        .lf-input:focus { border-color: #8b5cf6; outline: none; }
         .lf-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; }
-        .lf-btn-primary { background: #db2777; color: #fff; }
-        .lf-btn-primary:hover { background: #be185d; }
+        .lf-btn-primary { background: #8b5cf6; color: #fff; }
+        .lf-btn-primary:hover { background: #7c3aed; }
         .lf-btn-ghost { background: transparent; color: ${css.textMuted}; border: 1px solid ${css.border}; }
         .lf-btn-ghost:hover { background: ${css.hover}; color: ${css.text}; }
         .nav-item { padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; white-space: nowrap; }
@@ -1972,7 +1972,7 @@
         .modal { background: ${css.card}; border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
         .cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; }
         .cal-day:hover { background: ${css.hover}; }
-        .cal-day.today { background: #db2777; color: #fff; font-weight: 600; }
+        .cal-day.today { background: #8b5cf6; color: #fff; font-weight: 600; }
         .progress-bar { height: 6px; border-radius: 3px; background: ${dark ? "#333" : "#f1f5f9"}; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
         .streak-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
