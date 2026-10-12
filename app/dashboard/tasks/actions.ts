@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientId } from "@/lib/ids";
 
 async function requireUserId(supabase: SupabaseClient) {
   const {
@@ -30,6 +31,7 @@ export async function addTask(formData: FormData) {
   const category = (formData.get("category") as string)?.trim() || "Personal";
 
   await supabase.from("tasks").insert({
+    id: clientId(formData),
     user_id: userId,
     title,
     description,

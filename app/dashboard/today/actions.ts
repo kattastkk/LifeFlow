@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientId } from "@/lib/ids";
 
 async function requireUserId(supabase: SupabaseClient) {
   const {
@@ -23,7 +24,7 @@ export async function addTodayItem(formData: FormData) {
   const text = (formData.get("text") as string)?.trim();
   if (!text) return;
 
-  await supabase.from("today_items").insert({ user_id: userId, text, date: today() });
+  await supabase.from("today_items").insert({ id: clientId(formData), user_id: userId, text, date: today() });
   revalidatePath("/dashboard/today");
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientId } from "@/lib/ids";
 
 async function requireUserId(supabase: SupabaseClient) {
   const {
@@ -18,7 +19,7 @@ export async function addProject(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   if (!name) return;
 
-  await supabase.from("projects").insert({ user_id: userId, name });
+  await supabase.from("projects").insert({ id: clientId(formData), user_id: userId, name });
   revalidatePath("/dashboard/todo");
 }
 
@@ -41,7 +42,7 @@ export async function addTodo(formData: FormData) {
 
   await supabase
     .from("todo_items")
-    .insert({ user_id: userId, text, project_id: projectId });
+    .insert({ id: clientId(formData), user_id: userId, text, project_id: projectId });
   revalidatePath("/dashboard/todo");
 }
 
