@@ -105,3 +105,17 @@ export interface WantItem {
   completed: boolean;
   created_at: string;
 }
+
+export interface Homework {
+  id: string;
+  user_id: string;
+  title: string;
+  course: string | null;
+  due_date: string;
+  due_time: string | null;
+  url: string | null;
+  completed: boolean;
+  source: "moodle" | "manual";
+  external_id: string | null;
+  created_at: string;
+}

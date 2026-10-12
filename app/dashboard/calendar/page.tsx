@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { CalendarEvent, DailyHistory } from "@/types/database";
+import type { CalendarEvent, DailyHistory, Homework } from "@/types/database";
 import { addEvent, updateEvent, deleteEvent } from "./actions";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -37,10 +37,12 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
   const lastOfMonth = `${year}-${pad(month + 1)}-${pad(new Date(year, month + 1, 0).getDate())}`;
 
   const supabase = await createClient();
-  const [{ data: eventsData }, { data: historyData }] = await Promise.all([
+  const [{ data: eventsData }, { data: historyData }, { data: homeworkData }] = await Promise.all([
     supabase.from("events").select("*").gte("event_date", firstOfMonth).lte("event_date", lastOfMonth),
     supabase.from("daily_history").select("*").order("date", { ascending: false }),
+    supabase.from("homework").select("*").gte("due_date", firstOfMonth).lte("due_date", lastOfMonth),
   ]);
+  const homework = (homeworkData ?? []) as Homework[];
   const events = (eventsData ?? []) as CalendarEvent[];
   const history = (historyData ?? []) as DailyHistory[];
   const editing = editId ? events.find((e) => e.id === editId) ?? null : null;
@@ -54,6 +56,7 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
         <div>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Calendar</h2>
           {history.length > 0 && <p style={{ fontSize: 12, color: "#7c3aed", marginTop: 3 }}>💜 Dates with a purple dot have a daily history log — click to view.</p>}
+          {homework.length > 0 && <p style={{ fontSize: 12, color: "#ea580c", marginTop: 3 }}>📚 Orange items are homework deadlines — click one to open Homework.</p>}
         </div>
       </div>
 
@@ -111,6 +114,7 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
             const isToday = date === todayStr;
             const dayNum = Number(date.slice(-2));
             const evs = events.filter((e) => e.event_date === date);
+            const hws = homework.filter((h) => h.due_date === date);
             const hist = history.find((h) => h.date === date) ?? null;
             const cellInner = (
               <>
@@ -125,6 +129,21 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
                     </div>
                   )}
                 </div>
+                {hws.slice(0, 2).map((h) => {
+                  const chipStyle = { display: "block", fontSize: 10, padding: "1px 6px", background: "#ffedd5", color: "#c2410c", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", textDecoration: h.completed ? "line-through" : "none", opacity: h.completed ? 0.6 : 1 } as const;
+                  const chipTitle = `${h.course ? h.course + " · " : ""}${h.title}${h.due_time ? " · " + h.due_time.slice(0, 5) : ""}`;
+                  // Cells with a history log are already wrapped in a Link, so don't nest another.
+                  return hist ? (
+                    <div key={h.id} title={chipTitle} style={chipStyle}>
+                      📚 {h.title}
+                    </div>
+                  ) : (
+                    <Link key={h.id} href="/dashboard/homework" title={chipTitle} style={chipStyle}>
+                      📚 {h.title}
+                    </Link>
+                  );
+                })}
+                {hws.length > 2 && <div style={{ fontSize: 10, color: "#c2410c", paddingLeft: 6 }}>+{hws.length - 2} homework</div>}
                 {evs.slice(0, 2).map((e) => (
                   <div key={e.id} style={{ fontSize: 10, padding: "1px 6px", background: "#ede9fe", color: "#db2777", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
                     {e.title}

@@ -7,6 +7,7 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠", addable: false },
   { href: "/dashboard/today", label: "Today", icon: "☀️", addable: true },
   { href: "/dashboard/calendar", label: "Calendar", icon: "📅", addable: true },
+  { href: "/dashboard/homework", label: "Homework", icon: "📚", addable: true },
   { href: "/dashboard/tasks", label: "Tasks", icon: "✅", addable: true },
   { href: "/dashboard/todo", label: "To Do List", icon: "📝", addable: true },
   { href: "/dashboard/wantodo", label: "Want To Do", icon: "🌟", addable: true },
