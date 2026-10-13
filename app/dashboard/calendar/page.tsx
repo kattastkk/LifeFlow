@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { localToday } from "@/lib/ical";
-import { googleEvents } from "@/lib/googleCalendar";
+import { googleConfigured, googleEvents } from "@/lib/googleCalendar";
+import SyncButton from "../sync/SyncButton";
 import type { CalendarEvent, Homework } from "@/types/database";
 import CalendarBoard from "./CalendarBoard";
 
@@ -26,9 +27,12 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 1200, margin: "0 auto" }}>
-      <div>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Calendar</h2>
-        <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 3 }}>Click a day to see everything on it or add an event.</p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Calendar</h2>
+          <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 3 }}>Click a day to see everything on it or add an event.</p>
+        </div>
+        <SyncButton />
       </div>
       <CalendarBoard
         key={monthStr}
@@ -38,7 +42,7 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
         events={(eventsData ?? []) as CalendarEvent[]}
         homework={(homeworkData ?? []) as Homework[]}
         google={google.events}
-        googleConfigured={Boolean(process.env.GOOGLE_ICAL_URL?.trim())}
+        googleConfigured={googleConfigured()}
         googleFailed={google.failed}
       />
     </div>

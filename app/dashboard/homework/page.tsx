@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { localToday, TIME_ZONE } from "@/lib/ical";
 import { classChangeKind } from "@/lib/classChanges";
 import type { Homework } from "@/types/database";
-import { addHomework, updateHomework, toggleHomework, deleteHomework, syncHomework } from "./actions";
+import { addHomework, updateHomework, toggleHomework, deleteHomework } from "./actions";
+import SyncButton from "../sync/SyncButton";
 
 function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
@@ -24,14 +25,8 @@ function urgency(diff: number) {
   return { bg: "#fef3c7", fg: "#b45309", text: `${diff} days left` };
 }
 
-const SYNC_MESSAGES: Record<string, { text: string; bg: string; fg: string }> = {
-  ok: { text: "Synced from MyCourses", bg: "#d1fae5", fg: "#047857" },
-  failed: { text: "Couldn't sync from MyCourses. Check MOODLE_ICAL_URL and try again.", bg: "#fee2e2", fg: "#dc2626" },
-  missing: { text: "MOODLE_ICAL_URL isn't set in .env.local yet. Add it, then restart the dev server.", bg: "#fef3c7", fg: "#b45309" },
-};
-
 export default async function HomeworkPage(props: PageProps<"/dashboard/homework">) {
-  const { edit: editParam, done: doneParam, sync: syncParam, count: countParam } = await props.searchParams;
+  const { edit: editParam, done: doneParam } = await props.searchParams;
   const editId = typeof editParam === "string" ? editParam : null;
   const showDone = doneParam === "1";
   const today = localToday();
@@ -54,8 +49,6 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
   const groups = new Map<string, Homework[]>();
   for (const h of visible) groups.set(h.due_date, [...(groups.get(h.due_date) ?? []), h]);
 
-  const syncMsg = typeof syncParam === "string" ? SYNC_MESSAGES[syncParam] : undefined;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 900, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -77,17 +70,8 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
             )}
           </div>
         </div>
-        <form action={syncHomework}>
-          <button type="submit" className="lf-btn lf-btn-primary">🔄 Sync MyCourses</button>
-        </form>
+        <SyncButton />
       </div>
-
-      {syncMsg && (
-        <div style={{ background: syncMsg.bg, color: syncMsg.fg, borderRadius: 12, padding: "10px 14px", fontSize: 14 }}>
-          {syncMsg.text}
-          {syncParam === "ok" && typeof countParam === "string" && ` · ${countParam} upcoming item${countParam === "1" ? "" : "s"}`}
-        </div>
-      )}
 
       <form key={editing?.id ?? "new"} action={editing ? updateHomework : addHomework} className="lf-card">
         {editing && <input type="hidden" name="id" value={editing.id} />}
@@ -122,7 +106,7 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
       {groups.size === 0 && (
         <div className="lf-card" style={{ textAlign: "center", padding: "32px 0", color: "var(--muted)", fontSize: 14 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-          No homework due. Press Sync MyCourses to check for new assignments.
+          No homework due. Press Sync to check MyCourses for new assignments.
         </div>
       )}
 

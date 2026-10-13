@@ -1,5 +1,9 @@
 import { expandEvents, parseIcal } from "@/lib/ical";
 
+export const GOOGLE_CALENDAR_TAG = "google-calendar";
+
+export const googleConfigured = () => Boolean(process.env.GOOGLE_ICAL_URL?.trim());
+
 export interface ExternalEvent {
   id: string;
   title: string;
@@ -13,7 +17,8 @@ export interface ExternalEvent {
 /**
  * Read-only Google Calendar events between two local dates. GOOGLE_ICAL_URL holds one or more
  * "Secret address in iCal format" links, separated by commas or whitespace. Feeds are cached
- * for five minutes; a feed that fails is skipped so the rest of the calendar still renders.
+ * for a minute (the Sync button clears that cache via GOOGLE_CALENDAR_TAG); a feed that fails
+ * is skipped so the rest of the calendar still renders.
  */
 export async function googleEvents(from: string, to: string): Promise<{ events: ExternalEvent[]; failed: number }> {
   const urls = (process.env.GOOGLE_ICAL_URL ?? "").split(/[\s,]+/).filter((u) => u.startsWith("https://"));
@@ -22,7 +27,7 @@ export async function googleEvents(from: string, to: string): Promise<{ events: 
   const perFeed = await Promise.all(
     urls.map(async (url, i) => {
       try {
-        const res = await fetch(url, { next: { revalidate: 300 } });
+        const res = await fetch(url, { next: { revalidate: 60, tags: [GOOGLE_CALENDAR_TAG] } });
         if (!res.ok) throw new Error(String(res.status));
         const text = await res.text();
         const calendar = text.match(/^X-WR-CALNAME:(.*)$/m)?.[1]?.trim() || "Google";

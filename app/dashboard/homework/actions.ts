@@ -3,8 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { localToday, parseIcal } from "@/lib/ical";
-import { classChangeKind } from "@/lib/classChanges";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function requireUserId(supabase: SupabaseClient) {
@@ -69,51 +67,4 @@ export async function deleteHomework(formData: FormData) {
 
   await supabase.from("homework").delete().eq("id", id).eq("user_id", userId);
   revalidate();
-}
-
-// Moodle titles look like "Lab 3 is due" / "Quiz 1 closes"; keep just the activity name.
-function cleanTitle(summary: string) {
-  return summary.replace(/\s+(is due|should be completed|closes|ปิด|ครบกำหนด.*)$/i, "").trim();
-}
-
-export async function syncHomework() {
-  const icalUrl = process.env.MOODLE_ICAL_URL;
-  if (!icalUrl) redirect("/dashboard/homework?sync=missing");
-
-  const supabase = await createClient();
-  const userId = await requireUserId(supabase);
-
-  let text: string;
-  try {
-    const res = await fetch(icalUrl, { cache: "no-store" });
-    if (!res.ok) throw new Error(String(res.status));
-    text = await res.text();
-  } catch {
-    redirect("/dashboard/homework?sync=failed");
-  }
-
-  const origin = new URL(icalUrl).origin;
-  const today = localToday();
-  const rows = parseIcal(text)
-    .filter((e) => e.date >= today && !/\sopens$/i.test(e.summary))
-    .map((e) => ({
-      user_id: userId,
-      source: "moodle" as const,
-      external_id: e.uid,
-      title: cleanTitle(e.summary) || e.summary,
-      course: e.categories || null,
-      due_date: e.date,
-      due_time: e.time,
-      url: e.url ?? `${origin}/calendar/view.php?view=day&time=${e.timestamp}`,
-    }));
-
-  if (rows.length > 0) {
-    // `completed` is omitted so a re-sync never un-ticks finished homework.
-    const { error } = await supabase.from("homework").upsert(rows, { onConflict: "user_id,external_id" });
-    if (error) redirect("/dashboard/homework?sync=failed");
-  }
-
-  revalidate();
-  const homeworkCount = rows.filter((r) => !classChangeKind(r.title)).length;
-  redirect(`/dashboard/homework?sync=ok&count=${homeworkCount}`);
 }
