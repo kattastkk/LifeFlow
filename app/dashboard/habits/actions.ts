@@ -3,6 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientId } from "@/lib/ids";
+
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+
+function habitFields(formData: FormData) {
+  const name = (formData.get("name") as string)?.trim();
+  const emoji = (formData.get("emoji") as string)?.trim().slice(0, 16) || "🌟";
+  const rawColor = formData.get("color") as string;
+  const color = HEX_RE.test(rawColor) ? rawColor.toLowerCase() : "#db2777";
+  return { name, emoji, color };
+}
 
 async function requireUserId(supabase: SupabaseClient) {
   const {
@@ -15,12 +26,10 @@ async function requireUserId(supabase: SupabaseClient) {
 export async function addHabit(formData: FormData) {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
-  const name = (formData.get("name") as string)?.trim();
+  const { name, emoji, color } = habitFields(formData);
   if (!name) return;
-  const emoji = (formData.get("emoji") as string)?.trim() || "🌟";
-  const color = (formData.get("color") as string) || "#db2777";
 
-  await supabase.from("habits").insert({ user_id: userId, name, emoji, color });
+  await supabase.from("habits").insert({ id: clientId(formData), user_id: userId, name, emoji, color });
   revalidatePath("/dashboard", "layout");
 }
 
@@ -28,10 +37,8 @@ export async function updateHabit(formData: FormData) {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
   const id = formData.get("id") as string;
-  const name = (formData.get("name") as string)?.trim();
+  const { name, emoji, color } = habitFields(formData);
   if (!name) return;
-  const emoji = (formData.get("emoji") as string)?.trim() || "🌟";
-  const color = (formData.get("color") as string) || "#db2777";
 
   await supabase.from("habits").update({ name, emoji, color }).eq("id", id).eq("user_id", userId);
   revalidatePath("/dashboard", "layout");
