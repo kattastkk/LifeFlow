@@ -66,6 +66,12 @@ export interface JournalEntry {
   content: string;
   prompt: string | null;
   date: string;
+  grateful: string | null;
+  felt_most: string | null;
+  achievements: string | null;
+  learned: string | null;
+  worries: string | null;
+  tomorrow: string | null;
   created_at: string;
 }
 

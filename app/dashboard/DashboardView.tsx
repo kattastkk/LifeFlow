@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { fd } from "@/lib/fd";
 import { catColor } from "@/lib/wantCategories";
+import { JOURNAL_TOPICS } from "@/lib/journal";
 import type { Task, TodayItem, CalendarEvent, Habit, HabitCompletion, Mood, JournalEntry, TodoItem, WantItem } from "@/types/database";
 import { setTaskStatus } from "./tasks/actions";
 import { toggleTodayItem } from "./today/actions";
@@ -479,7 +480,17 @@ export default function DashboardView({
           {latestJournal ? (
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8, lineHeight: 1.6 }}>
               <div style={{ fontSize: 11, marginBottom: 4 }}>{latestJournal.date}</div>
-              <div style={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>{latestJournal.content}</div>
+              {JOURNAL_TOPICS.filter((t) => latestJournal[t.key]?.trim())
+                .slice(0, 2)
+                .map((t) => (
+                  <div key={t.key} style={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", marginBottom: 4 }}>
+                    <span style={{ marginRight: 4 }}>{t.icon}</span>
+                    {latestJournal[t.key]}
+                  </div>
+                ))}
+              {!JOURNAL_TOPICS.some((t) => latestJournal[t.key]?.trim()) && (
+                <div style={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>{latestJournal.content}</div>
+              )}
             </div>
           ) : (
             <EmptyState msg="No journal entries yet" icon="✍️" />

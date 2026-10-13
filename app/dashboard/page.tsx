@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     supabase.from("habits").select("*").order("created_at", { ascending: true }),
     supabase.from("habit_completions").select("*").gte("date", isoDate(yearAgo)),
     supabase.from("moods").select("*").eq("date", today).maybeSingle(),
-    supabase.from("journal_entries").select("*").order("created_at", { ascending: false }).limit(1),
+    supabase.from("journal_entries").select("*").order("date", { ascending: false }).limit(1),
     supabase.from("todo_items").select("*"),
     supabase.from("want_items").select("*"),
   ]);
