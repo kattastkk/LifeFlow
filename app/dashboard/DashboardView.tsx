@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { fd } from "@/lib/fd";
+import { catColor } from "@/lib/wantCategories";
 import type { Task, TodayItem, CalendarEvent, Habit, HabitCompletion, Mood, JournalEntry, TodoItem, WantItem } from "@/types/database";
 import { setTaskStatus } from "./tasks/actions";
 import { toggleTodayItem } from "./today/actions";
@@ -19,16 +20,6 @@ const QUOTES = [
   { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
   { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
 ];
-
-const WANT_CAT_COLORS: Record<string, string> = {
-  Learning: "#f59e0b",
-  Travel: "#06b6d4",
-  Hobby: "#a78bfa",
-  Career: "#3b82f6",
-  "Personal Growth": "#10b981",
-  Fun: "#f97316",
-  Other: "#94a3b8",
-};
 
 const STATUS_COLORS: Record<string, [string, string]> = {
   "To Do": ["#f1f5f9", "#64748b"],
@@ -442,8 +433,8 @@ export default function DashboardView({
                       fontSize: 10,
                       padding: "2px 8px",
                       borderRadius: 20,
-                      background: (WANT_CAT_COLORS[i.category] ?? "#94a3b8") + "20",
-                      color: WANT_CAT_COLORS[i.category] ?? "#94a3b8",
+                      background: catColor(i.category) + "20",
+                      color: catColor(i.category),
                       fontWeight: 600,
                     }}
                   >
@@ -463,7 +454,7 @@ export default function DashboardView({
             noun="dreams"
             render={(item) => (
               <div key={item.id} style={rowStyle}>
-                <Check checked={item.completed} color={WANT_CAT_COLORS[item.category] ?? "#f472b6"} round onClick={() => tickWant(item)} label={item.title} />
+                <Check checked={item.completed} color={catColor(item.category)} round onClick={() => tickWant(item)} label={item.title} />
                 <span style={{ ...doneText(item.completed), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
                 <span style={{ fontSize: 10, color: "var(--muted)" }}>{item.category}</span>
               </div>
