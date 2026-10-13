@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientId } from "@/lib/ids";
 
 async function requireUserId(supabase: SupabaseClient) {
   const {
@@ -24,6 +25,7 @@ export async function addEvent(formData: FormData) {
   const description = (formData.get("description") as string)?.trim() || null;
 
   await supabase.from("events").insert({
+    id: clientId(formData),
     user_id: userId,
     title,
     event_date: eventDate,
@@ -31,7 +33,7 @@ export async function addEvent(formData: FormData) {
     status,
     description,
   });
-  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateEvent(formData: FormData) {
@@ -51,7 +53,7 @@ export async function updateEvent(formData: FormData) {
     .update({ title, event_date: eventDate, event_time: eventTime, status, description })
     .eq("id", id)
     .eq("user_id", userId);
-  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteEvent(formData: FormData) {
@@ -60,5 +62,5 @@ export async function deleteEvent(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("events").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard", "layout");
 }

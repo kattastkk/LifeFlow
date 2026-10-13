@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { localToday, TIME_ZONE } from "@/lib/ical";
+import { classChangeKind } from "@/lib/classChanges";
 import type { Homework } from "@/types/database";
 import { addHomework, updateHomework, toggleHomework, deleteHomework, syncHomework } from "./actions";
 
@@ -42,7 +43,10 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
     .gte("due_date", today)
     .order("due_date", { ascending: true })
     .order("due_time", { ascending: true, nullsFirst: false });
-  const all = (data ?? []) as Homework[];
+  // Class cancellations / make-ups come through the same MyCourses feed but live on the Calendar.
+  const rows = (data ?? []) as Homework[];
+  const all = rows.filter((h) => !classChangeKind(h.title));
+  const classChanges = rows.length - all.length;
   const visible = showDone ? all : all.filter((h) => !h.completed);
   const pending = all.filter((h) => !h.completed).length;
   const editing = editId ? all.find((h) => h.id === editId) ?? null : null;
@@ -62,6 +66,15 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
             <p className="text-sm text-muted">
               {pending} assignment{pending === 1 ? "" : "s"} to go, from today onward.
             </p>
+            {classChanges > 0 && (
+              <p className="text-xs text-muted" style={{ marginTop: 2 }}>
+                {classChanges} class cancellation{classChanges === 1 ? "" : "s"} / make-up{classChanges === 1 ? "" : "s"} are on the{" "}
+                <Link href="/dashboard/calendar" style={{ color: "#db2777" }} className="hover:underline">
+                  Calendar
+                </Link>
+                .
+              </p>
+            )}
           </div>
         </div>
         <form action={syncHomework}>

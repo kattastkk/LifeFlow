@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { localToday, parseIcal } from "@/lib/ical";
+import { classChangeKind } from "@/lib/classChanges";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function requireUserId(supabase: SupabaseClient) {
@@ -113,5 +114,6 @@ export async function syncHomework() {
   }
 
   revalidate();
-  redirect(`/dashboard/homework?sync=ok&count=${rows.length}`);
+  const homeworkCount = rows.filter((r) => !classChangeKind(r.title)).length;
+  redirect(`/dashboard/homework?sync=ok&count=${homeworkCount}`);
 }
