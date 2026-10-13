@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { CalendarEvent, DailyHistory, Homework } from "@/types/database";
+import type { CalendarEvent, Homework } from "@/types/database";
 import { addEvent, updateEvent, deleteEvent } from "./actions";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -20,13 +20,12 @@ function monthGrid(year: number, month: number) {
 }
 
 export default async function CalendarPage(props: PageProps<"/dashboard/calendar">) {
-  const { month: monthParam, edit: editParam, history: historyParam } = await props.searchParams;
+  const { month: monthParam, edit: editParam } = await props.searchParams;
   const now = new Date();
   const monthStr = typeof monthParam === "string" ? monthParam : `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
   const [year, month1] = monthStr.split("-").map(Number);
   const month = month1 - 1;
   const editId = typeof editParam === "string" ? editParam : null;
-  const historyDate = typeof historyParam === "string" ? historyParam : null;
   const todayStr = now.toISOString().slice(0, 10);
 
   const prevDate = new Date(year, month - 1, 1);
@@ -37,16 +36,13 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
   const lastOfMonth = `${year}-${pad(month + 1)}-${pad(new Date(year, month + 1, 0).getDate())}`;
 
   const supabase = await createClient();
-  const [{ data: eventsData }, { data: historyData }, { data: homeworkData }] = await Promise.all([
+  const [{ data: eventsData }, { data: homeworkData }] = await Promise.all([
     supabase.from("events").select("*").gte("event_date", firstOfMonth).lte("event_date", lastOfMonth),
-    supabase.from("daily_history").select("*").order("date", { ascending: false }),
     supabase.from("homework").select("*").gte("due_date", firstOfMonth).lte("due_date", lastOfMonth),
   ]);
   const homework = (homeworkData ?? []) as Homework[];
   const events = (eventsData ?? []) as CalendarEvent[];
-  const history = (historyData ?? []) as DailyHistory[];
   const editing = editId ? events.find((e) => e.id === editId) ?? null : null;
-  const historyRecord = historyDate ? history.find((h) => h.date === historyDate) ?? null : null;
 
   const cells = monthGrid(year, month);
 
@@ -55,7 +51,6 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Calendar</h2>
-          {history.length > 0 && <p style={{ fontSize: 12, color: "#7c3aed", marginTop: 3 }}>💜 Dates with a purple dot have a daily history log — click to view.</p>}
           {homework.length > 0 && <p style={{ fontSize: 12, color: "#ea580c", marginTop: 3 }}>📚 Orange items are homework deadlines — click one to open Homework.</p>}
         </div>
       </div>
@@ -115,29 +110,17 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
             const dayNum = Number(date.slice(-2));
             const evs = events.filter((e) => e.event_date === date);
             const hws = homework.filter((h) => h.due_date === date);
-            const hist = history.find((h) => h.date === date) ?? null;
             const cellInner = (
               <>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2, paddingRight: 2 }}>
                   <div className={`cal-day${isToday ? " today" : ""}`} style={{ width: 32, height: 32 }}>
                     {dayNum}
                   </div>
-                  {hist && (
-                    <div title={`${hist.completion_rate}% completed`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: hist.completion_rate === 100 ? "#10b981" : "#7c3aed" }} />
-                      <div style={{ fontSize: 8, color: "#7c3aed", fontWeight: 700 }}>{hist.completion_rate}%</div>
-                    </div>
-                  )}
                 </div>
                 {hws.slice(0, 2).map((h) => {
                   const chipStyle = { display: "block", fontSize: 10, padding: "1px 6px", background: "#ffedd5", color: "#c2410c", borderRadius: 4, marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", textDecoration: h.completed ? "line-through" : "none", opacity: h.completed ? 0.6 : 1 } as const;
                   const chipTitle = `${h.course ? h.course + " · " : ""}${h.title}${h.due_time ? " · " + h.due_time.slice(0, 5) : ""}`;
-                  // Cells with a history log are already wrapped in a Link, so don't nest another.
-                  return hist ? (
-                    <div key={h.id} title={chipTitle} style={chipStyle}>
-                      📚 {h.title}
-                    </div>
-                  ) : (
+                  return (
                     <Link key={h.id} href="/dashboard/homework" title={chipTitle} style={chipStyle}>
                       📚 {h.title}
                     </Link>
@@ -153,111 +136,13 @@ export default async function CalendarPage(props: PageProps<"/dashboard/calendar
               </>
             );
             return (
-              <div key={date} style={{ minHeight: 72, padding: "4px 2px", borderRadius: 8, background: hist ? "#faf5ff" : "transparent" }}>
-                {hist ? (
-                  <Link href={`/dashboard/calendar?month=${monthStr}&history=${date}`} style={{ display: "block" }}>
-                    {cellInner}
-                  </Link>
-                ) : (
-                  cellInner
-                )}
+              <div key={date} style={{ minHeight: 72, padding: "4px 2px", borderRadius: 8 }}>
+                {cellInner}
               </div>
             );
           })}
         </div>
       </div>
-
-      {historyRecord && (
-        <div className="lf-card" style={{ background: "#fff", border: "1px solid #e9d5ff" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg,#c084fc,#ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-              📖
-            </div>
-            <div>
-              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, fontWeight: 400, color: "var(--foreground)" }}>{historyRecord.date}</div>
-              <div style={{ fontSize: 12, color: "#7c3aed", marginTop: 2 }}>Daily History Log</div>
-            </div>
-            <Link href={`/dashboard/calendar?month=${monthStr}`} style={{ marginLeft: "auto", fontSize: 20, color: "var(--muted)" }}>
-              ✕
-            </Link>
-          </div>
-          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-            <div style={{ flex: 1, textAlign: "center", background: "#faf5ff", borderRadius: 12, padding: "10px 6px", border: "1px solid #e9d5ff" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: historyRecord.completion_rate === 100 ? "#10b981" : "#7c3aed" }}>{historyRecord.completion_rate}%</div>
-              <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Completion</div>
-            </div>
-            <div style={{ flex: 1, textAlign: "center", background: "#faf5ff", borderRadius: 12, padding: "10px 6px", border: "1px solid #e9d5ff" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#ec4899" }}>{historyRecord.completed_count}</div>
-              <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Done</div>
-            </div>
-            <div style={{ flex: 1, textAlign: "center", background: "#faf5ff", borderRadius: 12, padding: "10px 6px", border: "1px solid #e9d5ff" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--muted)" }}>{historyRecord.total_count}</div>
-              <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Total</div>
-            </div>
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ height: 8, borderRadius: 4, background: "#f3e8ff", overflow: "hidden" }}>
-              <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg,#ec4899,#a855f7)", width: `${historyRecord.completion_rate}%` }} />
-            </div>
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Today&apos;s Log</div>
-          <div style={{ display: "flex", flexDirection: "column", maxHeight: 320, overflowY: "auto" }}>
-            {historyRecord.items.filter((i) => i.completed).map((item) => (
-              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: "#fdf2f8", borderRadius: 8, marginBottom: 3 }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#ec4899", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ color: "#fff", fontSize: 11, lineHeight: 1 }}>✓</span>
-                </div>
-                <span style={{ fontSize: 14, color: "var(--foreground)", flex: 1 }}>{item.text}</span>
-              </div>
-            ))}
-            {historyRecord.items.filter((i) => !i.completed).map((item) => (
-              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderBottom: "1px solid var(--border)", opacity: 0.55, marginBottom: 3 }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 10 }}>☐</span>
-                </div>
-                <span style={{ fontSize: 14, color: "var(--foreground)", flex: 1, textDecoration: "line-through" }}>{item.text}</span>
-              </div>
-            ))}
-            {historyRecord.items.length === 0 && (
-              <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 14 }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-                No items were logged this day.
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {history.length > 0 && (
-        <div className="lf-card" style={{ background: "#faf5ff", border: "1px solid #e9d5ff" }}>
-          <h3 style={{ fontWeight: 600, color: "var(--foreground)", fontSize: 15, marginBottom: 12 }}>📖 Daily History Archive</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {[...history].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map((h) => (
-              <Link
-                key={h.date}
-                href={`/dashboard/calendar?month=${monthStr}&history=${h.date}`}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#fff", borderRadius: 12, border: "1px solid #f3e8ff" }}
-              >
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: h.completion_rate === 100 ? "#d1fae5" : "#ede9fe", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: h.completion_rate === 100 ? "#059669" : "#7c3aed" }}>{h.completion_rate}%</div>
-                  <div style={{ fontSize: 9, color: "var(--muted)" }}>
-                    {h.completed_count}/{h.total_count}
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: "var(--foreground)", fontSize: 14 }}>{h.date}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
-                    {h.items.filter((i) => i.completed).slice(0, 2).map((i) => i.text).join(" · ") || "No items completed"}
-                    {h.items.filter((i) => i.completed).length > 2 && ` +${h.items.filter((i) => i.completed).length - 2} more`}
-                  </div>
-                </div>
-                <div style={{ fontSize: 18 }}>{h.completion_rate === 100 ? "🌟" : h.completion_rate >= 50 ? "✨" : "💙"}</div>
-              </Link>
-            ))}
-            {history.length > 10 && <div style={{ textAlign: "center", fontSize: 12, color: "var(--muted)", paddingTop: 4 }}>+{history.length - 10} more archived days</div>}
-          </div>
-        </div>
-      )}
 
       <div className="lf-card">
         <h3 style={{ fontWeight: 600, color: "var(--foreground)", fontSize: 15, marginBottom: 12 }}>📋 All events</h3>

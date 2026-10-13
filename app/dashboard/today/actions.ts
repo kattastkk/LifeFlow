@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clientId } from "@/lib/ids";
@@ -62,55 +61,10 @@ export async function updateTodayItem(formData: FormData) {
   revalidatePath("/dashboard/today");
 }
 
-export async function clearCompletedToday(_formData: FormData) {
+export async function clearCompletedToday() {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
 
-  await supabase.from("today_items").delete().eq("user_id", userId).eq("date", today()).eq("completed", true);
+  await supabase.from("today_items").delete().eq("user_id", userId).eq("completed", true);
   revalidatePath("/dashboard/today");
-}
-
-export async function finishDay(_formData: FormData) {
-  const supabase = await createClient();
-  const userId = await requireUserId(supabase);
-  const date = today();
-
-  const { data: items } = await supabase
-    .from("today_items")
-    .select("id, text, completed")
-    .eq("user_id", userId)
-    .eq("date", date);
-
-  const list = items ?? [];
-  const totalCount = list.length;
-
-  if (totalCount === 0) {
-    redirect("/dashboard/today?ended=empty");
-  }
-
-  const { data: existing } = await supabase
-    .from("daily_history")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .maybeSingle();
-
-  const completedCount = list.filter((i) => i.completed).length;
-  const completionRate = Math.round((completedCount / totalCount) * 100);
-
-  await supabase.from("daily_history").upsert(
-    {
-      user_id: userId,
-      date,
-      completed_count: completedCount,
-      total_count: totalCount,
-      completion_rate: completionRate,
-      items: list,
-    },
-    { onConflict: "user_id,date" },
-  );
-
-  await supabase.from("today_items").delete().eq("user_id", userId).eq("date", date);
-  revalidatePath("/dashboard");
-  redirect(`/dashboard/today?ended=${existing ? "updated" : "saved"}`);
 }

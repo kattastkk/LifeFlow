@@ -10,7 +10,6 @@ import type {
   JournalEntry,
   TodoItem,
   WantItem,
-  DailyHistory,
 } from "@/types/database";
 
 const QUOTES = [
@@ -101,9 +100,6 @@ function habitStreak(habitId: string, completions: Set<string>) {
 export default async function DashboardPage() {
   const supabase = await createClient();
   const today = isoDate(new Date());
-  const yesterday = daysAgo(1);
-  const weekStart = daysAgo(6);
-  const monthStart = `${today.slice(0, 7)}-01`;
 
   const [
     { data: tasksData },
@@ -115,10 +111,9 @@ export default async function DashboardPage() {
     { data: journalData },
     { data: todoItemsData },
     { data: wantItemsData },
-    { data: historyData },
   ] = await Promise.all([
     supabase.from("tasks").select("*"),
-    supabase.from("today_items").select("*").eq("date", today),
+    supabase.from("today_items").select("*"),
     supabase.from("events").select("*").eq("event_date", today),
     supabase.from("habits").select("*").order("created_at", { ascending: true }),
     supabase.from("habit_completions").select("*").gte("date", daysAgo(365)),
@@ -126,7 +121,6 @@ export default async function DashboardPage() {
     supabase.from("journal_entries").select("*").order("created_at", { ascending: false }).limit(1),
     supabase.from("todo_items").select("*"),
     supabase.from("want_items").select("*"),
-    supabase.from("daily_history").select("*").order("date", { ascending: false }).limit(30),
   ]);
 
   const tasks = (tasksData ?? []) as Task[];
@@ -138,7 +132,6 @@ export default async function DashboardPage() {
   const latestJournal = ((journalData ?? []) as JournalEntry[])[0] ?? null;
   const todoItems = (todoItemsData ?? []) as TodoItem[];
   const wantItems = (wantItemsData ?? []) as WantItem[];
-  const history = (historyData ?? []) as DailyHistory[];
 
   const completionSet = new Set(completions.map((c) => `${c.habit_id}|${c.date}`));
 
@@ -161,24 +154,6 @@ export default async function DashboardPage() {
   const todayDone = todayItems.filter((i) => i.completed).length;
   const todayPct = todayItems.length ? Math.round((todayDone / todayItems.length) * 100) : 0;
   const todaySorted = [...todayItems].sort((a, b) => Number(a.completed) - Number(b.completed));
-
-  const yesterdayRecord = history.find((h) => h.date === yesterday) ?? null;
-
-  const daysArchived = history.length;
-  const avgRate = history.length ? Math.round(history.reduce((s, h) => s + h.completion_rate, 0) / history.length) : 0;
-  const doneThisWeek = history.filter((h) => h.date >= weekStart).reduce((s, h) => s + h.completed_count, 0);
-  const doneThisMonth = history.filter((h) => h.date >= monthStart).reduce((s, h) => s + h.completed_count, 0);
-  let prodStreak = 0;
-  {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    for (let i = 0; i < 365; i++) {
-      const k = isoDate(d);
-      if (!history.find((h) => h.date === k)) break;
-      prodStreak++;
-      d.setDate(d.getDate() - 1);
-    }
-  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
@@ -478,65 +453,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Yesterday's Reflection */}
-        <div className="lf-card" style={{ background: "#faf5ff", border: "1px solid #e9d5ff" }}>
-          <SectionHeader title="Yesterday's Reflection" icon="📖" action="View Calendar" href="/dashboard/calendar" />
-          {!yesterdayRecord ? (
-            <EmptyState msg="No history yet — end your day on the Today page to start tracking." icon="🌙" />
-          ) : (
-            <div>
-              <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-                <div style={{ flex: 1, textAlign: "center", background: "#ede9fe", borderRadius: 10, padding: "10px 6px" }}>
-                  <div style={{ fontWeight: 700, fontSize: 22, color: "#7c3aed" }}>{yesterdayRecord.completion_rate}%</div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Completion</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "center", background: "#d1fae5", borderRadius: 10, padding: "10px 6px" }}>
-                  <div style={{ fontWeight: 700, fontSize: 22, color: "#059669" }}>{yesterdayRecord.completed_count}</div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Done</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "center", background: "#fef3c7", borderRadius: 10, padding: "10px 6px" }}>
-                  <div style={{ fontWeight: 700, fontSize: 22, color: "#d97706" }}>{yesterdayRecord.total_count}</div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>Total</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                Completed items
-              </div>
-              {yesterdayRecord.items.filter((i) => i.completed).slice(0, 3).map((i) => (
-                <div key={i.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ color: "#ec4899", fontSize: 13, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: "var(--foreground)", opacity: 0.8 }}>{i.text}</span>
-                </div>
-              ))}
-              {yesterdayRecord.items.filter((i) => i.completed).length === 0 && (
-                <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", padding: "8px 0" }}>Nothing completed that day</div>
-              )}
-            </div>
-          )}
-        </div>
       </div>
-
-      {/* Daily Activity Insights */}
-      {history.length > 0 && (
-        <div className="lf-card" style={{ background: "#faf5ff", border: "1px solid #e9d5ff" }}>
-          <SectionHeader title="Daily Activity Insights" icon="📊" action="View Calendar" href="/dashboard/calendar" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 12 }}>
-            {[
-              { label: "Days archived", val: daysArchived, icon: "📅", color: "#db2777" },
-              { label: "Avg completion", val: `${avgRate}%`, icon: "📈", color: "#ec4899" },
-              { label: "Prod. streak", val: `${prodStreak}d`, icon: "🔥", color: "#f59e0b" },
-              { label: "Done this week", val: doneThisWeek, icon: "⚡", color: "#10b981" },
-              { label: "Done this month", val: doneThisMonth, icon: "🗓", color: "#3b82f6" },
-            ].map((s) => (
-              <div key={s.label} style={{ textAlign: "center", background: "#fff", borderRadius: 12, padding: "14px 8px", border: "1px solid #f3e8ff" }}>
-                <div style={{ fontSize: 20 }}>{s.icon}</div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: s.color, marginTop: 4 }}>{s.val}</div>
-                <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2, lineHeight: 1.3 }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

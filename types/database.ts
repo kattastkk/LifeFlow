@@ -26,16 +26,6 @@ export interface TodayItem {
   created_at: string;
 }
 
-export interface DailyHistory {
-  id: string;
-  user_id: string;
-  date: string;
-  completed_count: number;
-  total_count: number;
-  completion_rate: number;
-  items: Array<{ id: string; text: string; completed: boolean }>;
-}
-
 export interface CalendarEvent {
   id: string;
   user_id: string;

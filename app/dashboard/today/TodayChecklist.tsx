@@ -32,15 +32,7 @@ function fd(fields: Record<string, string>) {
   return f;
 }
 
-export default function TodayChecklist({
-  items: serverItems,
-  headerRight,
-  banner,
-}: {
-  items: TodayItem[];
-  headerRight: React.ReactNode;
-  banner: React.ReactNode;
-}) {
+export default function TodayChecklist({ items: serverItems }: { items: TodayItem[] }) {
   const [items, apply] = useOptimistic(serverItems, reduce);
   const [, startTransition] = useTransition();
   const [text, setText] = useState("");
@@ -78,7 +70,7 @@ export default function TodayChecklist({
     run({ type: "update", id, text: t }, () => updateTodayItem(fd({ id, text: t })));
   };
 
-  const clearDone = () => run({ type: "clearCompleted" }, () => clearCompletedToday(new FormData()));
+  const clearDone = () => run({ type: "clearCompleted" }, () => clearCompletedToday());
 
   const done = items.filter((i) => i.completed).length;
   const total = items.length;
@@ -172,9 +164,7 @@ export default function TodayChecklist({
             <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{allDone ? "🎉 Everything done — great work!" : "Focus on what matters today."}</p>
           </div>
         </div>
-        {headerRight}
       </div>
-      {banner}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
