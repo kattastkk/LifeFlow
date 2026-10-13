@@ -24,7 +24,7 @@ export async function addTodayItem(formData: FormData) {
   if (!text) return;
 
   await supabase.from("today_items").insert({ id: clientId(formData), user_id: userId, text, date: today() });
-  revalidatePath("/dashboard/today");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function toggleTodayItem(formData: FormData) {
@@ -38,7 +38,7 @@ export async function toggleTodayItem(formData: FormData) {
     .update({ completed: !completed })
     .eq("id", id)
     .eq("user_id", userId);
-  revalidatePath("/dashboard/today");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteTodayItem(formData: FormData) {
@@ -47,7 +47,7 @@ export async function deleteTodayItem(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("today_items").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/today");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateTodayItem(formData: FormData) {
@@ -58,7 +58,7 @@ export async function updateTodayItem(formData: FormData) {
   if (!text) return;
 
   await supabase.from("today_items").update({ text }).eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/today");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function clearCompletedToday() {
@@ -66,5 +66,5 @@ export async function clearCompletedToday() {
   const userId = await requireUserId(supabase);
 
   await supabase.from("today_items").delete().eq("user_id", userId).eq("completed", true);
-  revalidatePath("/dashboard/today");
+  revalidatePath("/dashboard", "layout");
 }

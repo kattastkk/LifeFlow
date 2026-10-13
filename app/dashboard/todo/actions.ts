@@ -20,7 +20,7 @@ export async function addProject(formData: FormData) {
   if (!name) return;
 
   await supabase.from("projects").insert({ id: clientId(formData), user_id: userId, name });
-  revalidatePath("/dashboard/todo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteProject(formData: FormData) {
@@ -29,7 +29,7 @@ export async function deleteProject(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("projects").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/todo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function addTodo(formData: FormData) {
@@ -43,7 +43,7 @@ export async function addTodo(formData: FormData) {
   await supabase
     .from("todo_items")
     .insert({ id: clientId(formData), user_id: userId, text, project_id: projectId });
-  revalidatePath("/dashboard/todo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function toggleTodo(formData: FormData) {
@@ -57,7 +57,7 @@ export async function toggleTodo(formData: FormData) {
     .update({ completed: !completed })
     .eq("id", id)
     .eq("user_id", userId);
-  revalidatePath("/dashboard/todo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteTodo(formData: FormData) {
@@ -66,5 +66,5 @@ export async function deleteTodo(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("todo_items").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/todo");
+  revalidatePath("/dashboard", "layout");
 }

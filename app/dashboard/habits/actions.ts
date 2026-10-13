@@ -21,7 +21,7 @@ export async function addHabit(formData: FormData) {
   const color = (formData.get("color") as string) || "#db2777";
 
   await supabase.from("habits").insert({ user_id: userId, name, emoji, color });
-  revalidatePath("/dashboard/habits");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateHabit(formData: FormData) {
@@ -34,7 +34,7 @@ export async function updateHabit(formData: FormData) {
   const color = (formData.get("color") as string) || "#db2777";
 
   await supabase.from("habits").update({ name, emoji, color }).eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/habits");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteHabit(formData: FormData) {
@@ -43,7 +43,7 @@ export async function deleteHabit(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("habits").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/habits");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function toggleHabitDay(formData: FormData) {
@@ -58,5 +58,5 @@ export async function toggleHabitDay(formData: FormData) {
   } else {
     await supabase.from("habit_completions").insert({ habit_id: habitId, date });
   }
-  revalidatePath("/dashboard/habits");
+  revalidatePath("/dashboard", "layout");
 }

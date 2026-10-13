@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import { fd } from "@/lib/fd";
 import type { TodayItem } from "@/types/database";
 import { addTodayItem, toggleTodayItem, deleteTodayItem, updateTodayItem, clearCompletedToday } from "./actions";
 
@@ -24,12 +25,6 @@ function reduce(items: TodayItem[], c: Change): TodayItem[] {
     case "clearCompleted":
       return items.filter((i) => !i.completed);
   }
-}
-
-function fd(fields: Record<string, string>) {
-  const f = new FormData();
-  Object.entries(fields).forEach(([k, v]) => f.set(k, v));
-  return f;
 }
 
 export default function TodayChecklist({ items: serverItems }: { items: TodayItem[] }) {

@@ -21,7 +21,7 @@ export async function addWantItem(formData: FormData) {
   const note = (formData.get("note") as string)?.trim() || null;
 
   await supabase.from("want_items").insert({ user_id: userId, title, category, note });
-  revalidatePath("/dashboard/wantodo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateWantItem(formData: FormData) {
@@ -34,7 +34,7 @@ export async function updateWantItem(formData: FormData) {
   const note = (formData.get("note") as string)?.trim() || null;
 
   await supabase.from("want_items").update({ title, category, note }).eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/wantodo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function toggleWantItem(formData: FormData) {
@@ -48,7 +48,7 @@ export async function toggleWantItem(formData: FormData) {
     .update({ completed: !completed })
     .eq("id", id)
     .eq("user_id", userId);
-  revalidatePath("/dashboard/wantodo");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteWantItem(formData: FormData) {
@@ -57,5 +57,5 @@ export async function deleteWantItem(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("want_items").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/wantodo");
+  revalidatePath("/dashboard", "layout");
 }

@@ -39,7 +39,7 @@ export async function addTask(formData: FormData) {
     priority,
     category,
   });
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function advanceTaskStatus(formData: FormData) {
@@ -50,7 +50,18 @@ export async function advanceTaskStatus(formData: FormData) {
   const next = NEXT_STATUS[status] ?? "To Do";
 
   await supabase.from("tasks").update({ status: next }).eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/dashboard", "layout");
+}
+
+export async function setTaskStatus(formData: FormData) {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  const id = formData.get("id") as string;
+  const status = formData.get("status") as string;
+  if (!(status in NEXT_STATUS)) return;
+
+  await supabase.from("tasks").update({ status }).eq("id", id).eq("user_id", userId);
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function updateTask(formData: FormData) {
@@ -71,7 +82,7 @@ export async function updateTask(formData: FormData) {
     .update({ title, description, due_date: dueDate, priority, category, status })
     .eq("id", id)
     .eq("user_id", userId);
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/dashboard", "layout");
 }
 
 export async function deleteTask(formData: FormData) {
@@ -80,5 +91,5 @@ export async function deleteTask(formData: FormData) {
   const id = formData.get("id") as string;
 
   await supabase.from("tasks").delete().eq("id", id).eq("user_id", userId);
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/dashboard", "layout");
 }

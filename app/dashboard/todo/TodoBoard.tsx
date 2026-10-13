@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import { fd } from "@/lib/fd";
 import type { Project, TodoItem } from "@/types/database";
 import { addProject, deleteProject, addTodo, toggleTodo, deleteTodo } from "./actions";
 
@@ -30,12 +31,6 @@ function reduce(b: Board, c: Change): Board {
     case "deleteItem":
       return { ...b, items: b.items.filter((i) => i.id !== c.id) };
   }
-}
-
-function fd(fields: Record<string, string>) {
-  const f = new FormData();
-  Object.entries(fields).forEach(([k, v]) => f.set(k, v));
-  return f;
 }
 
 function ProjectCard({
