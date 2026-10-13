@@ -3,7 +3,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { fd } from "@/lib/fd";
 import type { Project, TodoItem } from "@/types/database";
-import { addProject, deleteProject, addTodo, toggleTodo, deleteTodo } from "./actions";
+import { addProject, deleteProject, addTodo, toggleTodo, updateTodo, deleteTodo } from "./actions";
 
 type Board = { projects: Project[]; items: TodoItem[] };
 
@@ -12,6 +12,7 @@ type Change =
   | { type: "deleteProject"; id: string }
   | { type: "addItem"; item: TodoItem }
   | { type: "toggleItem"; id: string }
+  | { type: "updateItem"; id: string; text: string }
   | { type: "deleteItem"; id: string };
 
 function reduce(b: Board, c: Change): Board {
@@ -28,6 +29,8 @@ function reduce(b: Board, c: Change): Board {
       return { ...b, items: [c.item, ...b.items] };
     case "toggleItem":
       return { ...b, items: b.items.map((i) => (i.id === c.id ? { ...i, completed: !i.completed } : i)) };
+    case "updateItem":
+      return { ...b, items: b.items.map((i) => (i.id === c.id ? { ...i, text: c.text } : i)) };
     case "deleteItem":
       return { ...b, items: b.items.filter((i) => i.id !== c.id) };
   }
@@ -40,6 +43,7 @@ function ProjectCard({
   items,
   onAdd,
   onToggle,
+  onEditItem,
   onDeleteItem,
   onDelete,
 }: {
@@ -49,10 +53,18 @@ function ProjectCard({
   items: TodoItem[];
   onAdd: (projectId: string, text: string) => void;
   onToggle: (item: TodoItem) => void;
+  onEditItem: (id: string, text: string) => void;
   onDeleteItem: (id: string) => void;
   onDelete?: () => void;
 }) {
   const [text, setText] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const saveEdit = (id: string) => {
+    const t = editText.trim();
+    setEditId(null);
+    if (t) onEditItem(id, t);
+  };
   const done = items.filter((i) => i.completed).length;
   const total = items.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
@@ -109,17 +121,62 @@ function ProjectCard({
       </form>
 
       <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
-        {sorted.map((item) => (
+        {sorted.map((item) =>
+          editId === item.id ? (
+            <form
+              key={item.id}
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveEdit(item.id);
+              }}
+              className="flex items-center gap-2 px-1 py-1"
+            >
+              <input
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setEditId(null)}
+                autoFocus
+                className="lf-input"
+                style={{ padding: "4px 8px", fontSize: 13 }}
+              />
+              <button type="submit" className="lf-btn lf-btn-primary shrink-0" style={{ padding: "4px 10px", fontSize: 12 }}>
+                Save
+              </button>
+              <button type="button" onClick={() => setEditId(null)} className="text-xs text-muted hover:text-primary" title="Cancel">
+                ✕
+              </button>
+            </form>
+          ) : (
           <div key={item.id} className="flex items-center gap-2 rounded-lg px-1 py-1">
             <button type="button" onClick={() => onToggle(item)} className="text-base leading-none">
               {item.completed ? "☑️" : "⬜️"}
             </button>
-            <span className={`flex-1 truncate text-sm ${item.completed ? "text-muted line-through" : "text-foreground"}`}>{item.text}</span>
+            <span
+              onDoubleClick={() => {
+                setEditId(item.id);
+                setEditText(item.text);
+              }}
+              className={`flex-1 truncate text-sm ${item.completed ? "text-muted line-through" : "text-foreground"}`}
+            >
+              {item.text}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEditId(item.id);
+                setEditText(item.text);
+              }}
+              className="text-xs opacity-60 hover:opacity-100"
+              title="Edit"
+            >
+              ✏️
+            </button>
             <button type="button" onClick={() => onDeleteItem(item.id)} className="text-xs text-muted hover:text-primary" title="Delete">
               ✕
             </button>
           </div>
-        ))}
+          ),
+        )}
         {sorted.length === 0 && <p className="py-2 text-center text-sm text-muted">Nothing here yet.</p>}
       </div>
     </div>
@@ -163,11 +220,14 @@ export default function TodoBoard({ projects, items }: Board) {
   const toggleItem = (item: TodoItem) =>
     run({ type: "toggleItem", id: item.id }, () => toggleTodo(fd({ id: item.id, completed: String(item.completed) })));
 
+  const editItem = (id: string, text: string) =>
+    run({ type: "updateItem", id, text }, () => updateTodo(fd({ id, text })));
+
   const deleteItem = (id: string) => run({ type: "deleteItem", id }, () => deleteTodo(fd({ id })));
 
   const deleteProj = (id: string) => run({ type: "deleteProject", id }, () => deleteProject(fd({ id })));
 
-  const cardProps = { onAdd: addItem, onToggle: toggleItem, onDeleteItem: deleteItem };
+  const cardProps = { onAdd: addItem, onToggle: toggleItem, onEditItem: editItem, onDeleteItem: deleteItem };
 
   return (
     <>

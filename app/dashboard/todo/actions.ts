@@ -60,6 +60,17 @@ export async function toggleTodo(formData: FormData) {
   revalidatePath("/dashboard", "layout");
 }
 
+export async function updateTodo(formData: FormData) {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  const id = formData.get("id") as string;
+  const text = (formData.get("text") as string)?.trim();
+  if (!text) return;
+
+  await supabase.from("todo_items").update({ text }).eq("id", id).eq("user_id", userId);
+  revalidatePath("/dashboard", "layout");
+}
+
 export async function deleteTodo(formData: FormData) {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);
