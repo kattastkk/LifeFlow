@@ -32,6 +32,26 @@ export async function deleteProject(formData: FormData) {
   revalidatePath("/dashboard", "layout");
 }
 
+export async function renameProject(formData: FormData) {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  const id = formData.get("id") as string;
+  const name = (formData.get("name") as string)?.trim();
+  if (!name) return;
+
+  await supabase.from("projects").update({ name }).eq("id", id).eq("user_id", userId);
+  revalidatePath("/dashboard", "layout");
+}
+
+export async function saveBoardOrder(formData: FormData) {
+  const supabase = await createClient();
+  const userId = await requireUserId(supabase);
+  const order = JSON.parse(formData.get("order") as string) as string[];
+
+  await supabase.from("profiles").update({ todo_order: order }).eq("id", userId);
+  revalidatePath("/dashboard", "layout");
+}
+
 export async function addTodo(formData: FormData) {
   const supabase = await createClient();
   const userId = await requireUserId(supabase);

@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   display_name: string | null;
   line_user_id: string | null;
+  todo_order: string[] | null;
   created_at: string;
 }
 

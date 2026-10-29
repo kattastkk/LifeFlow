@@ -3,13 +3,25 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { fd } from "@/lib/fd";
 import type { Project, TodoItem } from "@/types/database";
-import { addProject, deleteProject, addTodo, toggleTodo, updateTodo, deleteTodo } from "./actions";
+import {
+  addProject,
+  renameProject,
+  deleteProject,
+  saveBoardOrder,
+  addTodo,
+  toggleTodo,
+  updateTodo,
+  deleteTodo,
+} from "./actions";
 
-type Board = { projects: Project[]; items: TodoItem[] };
+// order holds box ids ("inbox" or a project id) from left to right.
+type Board = { projects: Project[]; items: TodoItem[]; order: string[] };
 
 type Change =
   | { type: "addProject"; project: Project }
+  | { type: "renameProject"; id: string; name: string }
   | { type: "deleteProject"; id: string }
+  | { type: "reorder"; order: string[] }
   | { type: "addItem"; item: TodoItem }
   | { type: "toggleItem"; id: string }
   | { type: "updateItem"; id: string; text: string }
@@ -19,9 +31,14 @@ function reduce(b: Board, c: Change): Board {
   switch (c.type) {
     case "addProject":
       return { ...b, projects: [...b.projects, c.project] };
+    case "renameProject":
+      return { ...b, projects: b.projects.map((p) => (p.id === c.id ? { ...p, name: c.name } : p)) };
+    case "reorder":
+      return { ...b, order: c.order };
     case "deleteProject":
       // Mirrors the FK's ON DELETE SET NULL: items fall back to the Inbox.
       return {
+        ...b,
         projects: b.projects.filter((p) => p.id !== c.id),
         items: b.items.map((i) => (i.project_id === c.id ? { ...i, project_id: null } : i)),
       };
@@ -45,7 +62,9 @@ function ProjectCard({
   onToggle,
   onEditItem,
   onDeleteItem,
+  onRename,
   onDelete,
+  onGrab,
 }: {
   id: string;
   emoji: string;
@@ -55,8 +74,21 @@ function ProjectCard({
   onToggle: (item: TodoItem) => void;
   onEditItem: (id: string, text: string) => void;
   onDeleteItem: (id: string) => void;
+  onRename?: (name: string) => void;
   onDelete?: () => void;
+  onGrab: (grabbing: boolean) => void;
 }) {
+  const [renaming, setRenaming] = useState(false);
+  const [nameText, setNameText] = useState(name);
+  const startRename = () => {
+    setNameText(name);
+    setRenaming(true);
+  };
+  const saveName = () => {
+    const t = nameText.trim();
+    setRenaming(false);
+    if (t && t !== name) onRename?.(t);
+  };
   const [text, setText] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -74,11 +106,47 @@ function ProjectCard({
   });
 
   return (
-    <div className="lf-card flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <span className="text-lg">{emoji}</span> {name}
+    <div className="lf-card flex h-full flex-col gap-3">
+      {/* The header is the drag grip, except while the name is being typed. */}
+      <div
+        onPointerDown={() => !renaming && onGrab(true)}
+        onPointerUp={() => onGrab(false)}
+        className={`flex items-center justify-between gap-2 ${renaming ? "" : "cursor-grab active:cursor-grabbing"}`}
+      >
+        <h2 className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-foreground">
+          <span className="select-none text-muted" title="Drag to move">⠿</span>
+          <span className="text-lg">{emoji}</span>
+          {renaming ? (
+            <input
+              value={nameText}
+              onChange={(e) => setNameText(e.target.value)}
+              onBlur={saveName}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") {
+                  setNameText(name);
+                  setRenaming(false);
+                }
+              }}
+              autoFocus
+              className="lf-input"
+              style={{ padding: "4px 8px", fontSize: 13 }}
+            />
+          ) : (
+            <span
+              onClick={onRename && startRename}
+              className={`truncate ${onRename ? "cursor-text hover:text-primary" : ""}`}
+              title={onRename ? "Click to rename" : undefined}
+            >
+              {name}
+            </span>
+          )}
         </h2>
+        {onRename && !renaming && (
+          <button type="button" onClick={startRename} className="text-xs opacity-60 hover:opacity-100" title="Rename project">
+            ✏️
+          </button>
+        )}
         {onDelete && (
           <button type="button" onClick={onDelete} className="text-xs text-muted hover:text-primary" title="Delete project">
             ✕
@@ -183,10 +251,51 @@ function ProjectCard({
   );
 }
 
-export default function TodoBoard({ projects, items }: Board) {
-  const [board, apply] = useOptimistic({ projects, items }, reduce);
+export default function TodoBoard({ projects, items, order }: Board) {
+  const [board, apply] = useOptimistic({ projects, items, order }, reduce);
   const [, startTransition] = useTransition();
   const [projectName, setProjectName] = useState("");
+  const [grabbedId, setGrabbedId] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [liveOrder, setLiveOrder] = useState<string[] | null>(null);
+
+  // Saved order first, then any boxes it doesn't know about yet (new projects).
+  const boxIds = ["inbox", ...board.projects.map((p) => p.id)];
+  const savedOrder = [
+    ...board.order.filter((id) => boxIds.includes(id)),
+    ...boxIds.filter((id) => !board.order.includes(id)),
+  ];
+  const shownOrder = liveOrder ?? savedOrder;
+
+  const dragOver = (e: React.DragEvent, overId: string) => {
+    if (!dragId) return;
+    e.preventDefault();
+    if (overId === dragId) return;
+    // Take the hovered box's slot: it shifts toward where the dragged box came from.
+    setLiveOrder((cur) => {
+      const next = [...(cur ?? savedOrder)];
+      const to = next.indexOf(overId);
+      next.splice(next.indexOf(dragId), 1);
+      next.splice(to, 0, dragId);
+      return next;
+    });
+  };
+
+  const endDrag = () => {
+    const next = liveOrder;
+    setGrabbedId(null);
+    setDragId(null);
+    if (!next || next.join() === savedOrder.join()) {
+      setLiveOrder(null);
+      return;
+    }
+    // Clear the live order in the same transition so the board never flashes back.
+    startTransition(async () => {
+      setLiveOrder(null);
+      apply({ type: "reorder", order: next });
+      await saveBoardOrder(fd({ order: JSON.stringify(next) }));
+    });
+  };
 
   const run = (change: Change, save: () => Promise<unknown>) =>
     startTransition(async () => {
@@ -225,6 +334,9 @@ export default function TodoBoard({ projects, items }: Board) {
 
   const deleteItem = (id: string) => run({ type: "deleteItem", id }, () => deleteTodo(fd({ id })));
 
+  const renameProj = (id: string, name: string) =>
+    run({ type: "renameProject", id, name }, () => renameProject(fd({ id, name })));
+
   const deleteProj = (id: string) => run({ type: "deleteProject", id }, () => deleteProject(fd({ id })));
 
   const cardProps = { onAdd: addItem, onToggle: toggleItem, onEditItem: editItem, onDeleteItem: deleteItem };
@@ -238,19 +350,47 @@ export default function TodoBoard({ projects, items }: Board) {
         </button>
       </form>
 
-      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        <ProjectCard id="inbox" emoji="📥" name="Inbox" items={board.items.filter((i) => !i.project_id)} {...cardProps} />
-        {board.projects.map((p) => (
-          <ProjectCard
-            key={p.id}
-            id={p.id}
-            emoji={p.emoji}
-            name={p.name}
-            items={board.items.filter((i) => i.project_id === p.id)}
-            onDelete={() => deleteProj(p.id)}
-            {...cardProps}
-          />
-        ))}
+      <div onPointerUp={() => setGrabbedId(null)} className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {shownOrder.map((boxId) => {
+          const p = board.projects.find((proj) => proj.id === boxId);
+          return (
+            <div
+              key={boxId}
+              draggable={grabbedId === boxId}
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", boxId);
+                setDragId(boxId);
+              }}
+              onDragOver={(e) => dragOver(e, boxId)}
+              onDrop={(e) => e.preventDefault()}
+              onDragEnd={endDrag}
+              className={dragId === boxId ? "opacity-40" : ""}
+            >
+              {p ? (
+                <ProjectCard
+                  id={p.id}
+                  emoji={p.emoji}
+                  name={p.name}
+                  items={board.items.filter((i) => i.project_id === p.id)}
+                  onRename={(name) => renameProj(p.id, name)}
+                  onDelete={() => deleteProj(p.id)}
+                  onGrab={(g) => setGrabbedId(g ? p.id : null)}
+                  {...cardProps}
+                />
+              ) : (
+                <ProjectCard
+                  id="inbox"
+                  emoji="📥"
+                  name="Inbox"
+                  items={board.items.filter((i) => !i.project_id)}
+                  onGrab={(g) => setGrabbedId(g ? "inbox" : null)}
+                  {...cardProps}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     </>
   );

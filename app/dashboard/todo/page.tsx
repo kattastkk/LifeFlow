@@ -5,9 +5,10 @@ import TodoBoard from "./TodoBoard";
 export default async function TodoListPage() {
   const supabase = await createClient();
 
-  const [{ data: projects }, { data: todoItems }] = await Promise.all([
+  const [{ data: projects }, { data: todoItems }, { data: profile }] = await Promise.all([
     supabase.from("projects").select("*").order("created_at", { ascending: true }),
     supabase.from("todo_items").select("*").order("created_at", { ascending: false }),
+    supabase.from("profiles").select("todo_order").maybeSingle(),
   ]);
 
   return (
@@ -20,7 +21,11 @@ export default async function TodoListPage() {
         </div>
       </div>
 
-      <TodoBoard projects={(projects ?? []) as Project[]} items={(todoItems ?? []) as TodoItem[]} />
+      <TodoBoard
+        projects={(projects ?? []) as Project[]}
+        items={(todoItems ?? []) as TodoItem[]}
+        order={(profile?.todo_order as string[] | null) ?? []}
+      />
     </div>
   );
 }
