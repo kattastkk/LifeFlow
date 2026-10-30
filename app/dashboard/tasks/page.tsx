@@ -9,7 +9,7 @@ export default async function TasksPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 900, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Tasks</h2>
+        <h2 style={{ fontSize: 26, fontWeight: 700, color: "var(--foreground)" }}>Tasks</h2>
       </div>
       <TaskList tasks={(data ?? []) as Task[]} />
     </div>

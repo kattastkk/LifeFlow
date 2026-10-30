@@ -155,7 +155,7 @@ export default function TodayChecklist({ items: serverItems }: { items: TodayIte
             ☀️
           </div>
           <div>
-            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "var(--foreground)", lineHeight: 1 }}>Today&apos;s Plan</h2>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--foreground)", lineHeight: 1 }}>Today&apos;s Plan</h2>
             <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>{allDone ? "🎉 Everything done — great work!" : "Focus on what matters today."}</p>
           </div>
         </div>

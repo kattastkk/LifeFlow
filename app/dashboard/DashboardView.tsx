@@ -231,7 +231,7 @@ export default function DashboardView({
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, color: "var(--foreground)" }}>Good {timeOfDay()} ✨</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--foreground)" }}>Good {timeOfDay()} ✨</h1>
           <p style={{ color: "var(--muted)", marginTop: 4 }}>{dateLabel}</p>
         </div>
         <div style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>

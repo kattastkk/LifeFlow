@@ -13,7 +13,7 @@ export default async function WantToDoPage() {
           🌟
         </div>
         <div>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "var(--foreground)", lineHeight: 1 }}>Want To Do</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--foreground)", lineHeight: 1 }}>Want To Do</h2>
           <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>Dreams, ideas, and experiences I want to explore.</p>
         </div>
       </div>

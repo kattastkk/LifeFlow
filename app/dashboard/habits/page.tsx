@@ -28,7 +28,7 @@ export default async function HabitsPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 900, margin: "0 auto" }}>
-      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, color: "var(--foreground)" }}>Habit Tracker</h2>
+      <h2 style={{ fontSize: 26, fontWeight: 700, color: "var(--foreground)" }}>Habit Tracker</h2>
       <HabitBoard habits={habits} completions={completions} today={today} />
     </div>
   );
