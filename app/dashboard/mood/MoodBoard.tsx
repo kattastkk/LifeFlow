@@ -81,9 +81,9 @@ export default function MoodBoard({ moods: serverMoods, today }: { moods: Mood[]
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 600,
-    border: `1.5px solid ${active ? "#db2777" : "var(--border)"}`,
-    background: active ? "#db2777" : "transparent",
-    color: active ? "#fff" : "var(--muted)",
+    border: `1.5px solid ${active ? "var(--primary)" : "var(--border)"}`,
+    background: active ? "var(--primary)" : "transparent",
+    color: active ? "var(--on-primary)" : "var(--muted)",
     cursor: "pointer",
   });
 
@@ -157,7 +157,7 @@ export default function MoodBoard({ moods: serverMoods, today }: { moods: Mood[]
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px,1fr))", gap: 12 }}>
         {[
-          { label: "Days tracked", val: moods.length, color: "#db2777" },
+          { label: "Days tracked", val: moods.length, color: "var(--primary)" },
           { label: "Avg mood (1-5)", val: avg, color: "#f59e0b" },
           { label: "Today's mood", val: todayMood ? MOODS.find((m) => m.value === todayMood.value)?.icon : "—", color: "#10b981" },
         ].map((s) => (
@@ -195,7 +195,7 @@ export default function MoodBoard({ moods: serverMoods, today }: { moods: Mood[]
                     opacity: m ? 0.85 : 0.5,
                   }}
                 />
-                <div style={{ fontSize: 9, marginTop: 4, color: active ? "#db2777" : "var(--muted)", fontWeight: active ? 700 : 400 }}>{Number(d.slice(8))}</div>
+                <div style={{ fontSize: 9, marginTop: 4, color: active ? "var(--primary)" : "var(--muted)", fontWeight: active ? 700 : 400 }}>{Number(d.slice(8))}</div>
               </button>
             );
           })}
@@ -232,7 +232,7 @@ export default function MoodBoard({ moods: serverMoods, today }: { moods: Mood[]
                 <span style={{ flex: 1 }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontWeight: 500, color: "var(--foreground)", fontSize: 14 }}>{moodData?.label}</span>
-                    <span style={{ fontSize: 11, color: m.date === date ? "#db2777" : "var(--muted)" }}>{m.date}</span>
+                    <span style={{ fontSize: 11, color: m.date === date ? "var(--primary)" : "var(--muted)" }}>{m.date}</span>
                   </span>
                   {m.note && <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>{m.note}</span>}
                 </span>

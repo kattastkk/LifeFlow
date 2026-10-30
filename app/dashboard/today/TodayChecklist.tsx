@@ -92,7 +92,7 @@ export default function TodayChecklist({ items: serverItems }: { items: TodayIte
             className="lf-input"
             style={{ flex: 1, padding: "6px 10px", fontSize: 14 }}
           />
-          <button type="submit" style={{ fontSize: 12, padding: "3px 10px", borderRadius: 8, background: "#ec4899", color: "#fff", border: "none", cursor: "pointer", fontWeight: 500 }}>
+          <button type="submit" style={{ fontSize: 12, padding: "3px 10px", borderRadius: 8, background: "var(--primary)", color: "var(--on-primary)", border: "none", cursor: "pointer", fontWeight: 500 }}>
             Save
           </button>
           <button type="button" onClick={() => setEditId(null)} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 8, background: "var(--input)", color: "var(--muted)", border: "none", cursor: "pointer" }}>
@@ -111,15 +111,15 @@ export default function TodayChecklist({ items: serverItems }: { items: TodayIte
             height: 24,
             borderRadius: 6,
             flexShrink: 0,
-            border: `2px solid ${item.completed ? "#ec4899" : "var(--border)"}`,
-            background: item.completed ? "#ec4899" : "transparent",
+            border: `2px solid ${item.completed ? "var(--primary)" : "var(--border)"}`,
+            background: item.completed ? "var(--primary)" : "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
           }}
         >
-          {item.completed && <span style={{ color: "#fff", fontSize: 12, lineHeight: 1 }}>✓</span>}
+          {item.completed && <span style={{ color: "var(--on-primary)", fontSize: 12, lineHeight: 1 }}>✓</span>}
         </button>
         <span style={{ flex: 1, fontSize: 14, color: "var(--foreground)", textDecoration: item.completed ? "line-through" : "none", opacity: item.completed ? 0.45 : 1, lineHeight: 1.5 }}>
           {item.text}
@@ -151,7 +151,7 @@ export default function TodayChecklist({ items: serverItems }: { items: TodayIte
       <div>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #f9a8d4, #c084fc)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, var(--primary-light), var(--accent))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
             ☀️
           </div>
           <div>
@@ -180,32 +180,32 @@ export default function TodayChecklist({ items: serverItems }: { items: TodayIte
         <div className="lf-card" style={{ padding: "16px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>Daily progress</span>
-            <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,#ec4899,#a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,var(--primary),var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               {pct}%
             </span>
           </div>
-          <div style={{ height: 10, borderRadius: 5, background: "#f3e8ff", overflow: "hidden" }}>
-            <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg, #ec4899, #a855f7)", width: `${pct}%`, transition: "width 0.5s ease" }} />
+          <div style={{ height: 10, borderRadius: 5, background: "var(--accent-soft)", overflow: "hidden" }}>
+            <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg, var(--primary), var(--accent))", width: `${pct}%`, transition: "width 0.5s ease" }} />
           </div>
-          {allDone && <div style={{ marginTop: 10, fontSize: 13, color: "#be185d", textAlign: "center", fontWeight: 500 }}>🎊 All done! You crushed today&apos;s plan!</div>}
+          {allDone && <div style={{ marginTop: 10, fontSize: 13, color: "var(--primary-strong)", textAlign: "center", fontWeight: 500 }}>🎊 All done! You crushed today&apos;s plan!</div>}
         </div>
       )}
 
-      <div style={{ background: "#fdf2f8", border: "1px solid #fbcfe8", borderRadius: 16, padding: "16px 18px" }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#be185d", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>✦ Add to today</div>
+      <div style={{ background: "var(--primary-soft)", border: "1px solid var(--primary-light)", borderRadius: 16, padding: "16px 18px" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--primary-strong)", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>✦ Add to today</div>
         <form onSubmit={add} style={{ display: "flex", gap: 10 }}>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="e.g. Read Python for 30 minutes, Buy groceries…"
             className="lf-input"
-            style={{ flex: 1, background: "#fff", borderColor: "#fbcfe8" }}
+            style={{ flex: 1, background: "var(--card)", borderColor: "var(--primary-light)" }}
           />
-          <button type="submit" style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #ec4899, #a855f7)", color: "#fff", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <button type="submit" style={{ padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, var(--primary), var(--accent))", color: "var(--on-primary)", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
             + Add
           </button>
         </form>
-        <div style={{ fontSize: 11, color: "#be185d", marginTop: 8, opacity: 0.7 }}>Press Enter to add quickly</div>
+        <div style={{ fontSize: 11, color: "var(--primary-strong)", marginTop: 8, opacity: 0.7 }}>Press Enter to add quickly</div>
       </div>
 
       <div className="lf-card" style={{ padding: 0, overflow: "hidden" }}>

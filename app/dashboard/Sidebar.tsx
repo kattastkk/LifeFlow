@@ -29,7 +29,7 @@ export default function Sidebar() {
             key={item.href}
             href={item.href}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              active ? "bg-sidebar-active text-white" : "text-foreground hover:bg-input"
+              active ? "bg-sidebar-active text-on-primary" : "text-foreground hover:bg-input"
             }`}
           >
             <span className="mr-2">{item.icon}</span>

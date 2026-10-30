@@ -62,7 +62,7 @@ export default async function HomeworkPage(props: PageProps<"/dashboard/homework
             {classChanges > 0 && (
               <p className="text-xs text-muted" style={{ marginTop: 2 }}>
                 {classChanges} class cancellation{classChanges === 1 ? "" : "s"} / make-up{classChanges === 1 ? "" : "s"} are on the{" "}
-                <Link href="/dashboard/calendar" style={{ color: "#db2777" }} className="hover:underline">
+                <Link href="/dashboard/calendar" style={{ color: "var(--primary)" }} className="hover:underline">
                   Calendar
                 </Link>
                 .

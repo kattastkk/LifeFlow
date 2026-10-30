@@ -2,17 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #FFE0EE;
-  --card: #ffffff;
-  --input: #FFC7E0;
-  --border: #e5e7eb;
-  --foreground: #171717;
-  --muted: #6b7280;
-  --primary: #db2777;
-  --primary-hover: #7c3aed;
-  --sidebar-active: #db2777;
-}
+/* Theme colors (--background, --primary, ...) are defined in app/themes.ts. */
 
 .dark {
   --background: #0f0f1a;
@@ -36,6 +26,14 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar: var(--sidebar);
+  --color-on-primary: var(--on-primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-light: var(--primary-light);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-highlight: var(--highlight);
   --font-sans: var(--font-dm-sans);
   --font-display: var(--font-dm-serif);
 }
@@ -51,17 +49,17 @@ body {
 .lf-input { background: var(--input); border: 1px solid var(--border); color: var(--foreground); border-radius: 10px; padding: 10px 14px; width: 100%; font-size: 14px; }
 .lf-input:focus { border-color: var(--primary); outline: none; }
 .lf-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; cursor: pointer; border: none; }
-.lf-btn-primary { background: var(--primary); color: #fff; }
+.lf-btn-primary { background: var(--primary); color: var(--on-primary); }
 .lf-btn-primary:hover { background: var(--primary-hover); }
 .lf-btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 .lf-btn-ghost:hover { background: var(--input); color: var(--foreground); }
 .nav-item { padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: all 0.18s; white-space: nowrap; }
-.nav-item.active { background: var(--sidebar-active); color: #fff; }
+.nav-item.active { background: var(--sidebar-active); color: var(--on-primary); }
 .nav-item:not(.active):hover { background: var(--input); }
 .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
 .cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-size: 14px; }
 .cal-day:hover { background: var(--input); }
-.cal-day.today { background: var(--primary); color: #fff; font-weight: 600; }
+.cal-day.today { background: var(--primary); color: var(--on-primary); font-weight: 600; }
 .progress-bar { height: 6px; border-radius: 3px; background: #f1f5f9; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
 .streak-badge { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }

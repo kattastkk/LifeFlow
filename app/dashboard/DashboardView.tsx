@@ -150,7 +150,7 @@ function Expandable<T>({ items, limit, noun, render }: { items: T[]; limit: numb
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          style={{ display: "block", width: "100%", marginTop: 8, padding: "6px 0", fontSize: 12, fontWeight: 500, color: "#db2777", background: "transparent", border: "none", cursor: "pointer" }}
+          style={{ display: "block", width: "100%", marginTop: 8, padding: "6px 0", fontSize: 12, fontWeight: 500, color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer" }}
         >
           {open ? "Show less ▲" : `+${hidden} more ${noun} ▼`}
         </button>
@@ -234,7 +234,7 @@ export default function DashboardView({
           <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--foreground)" }}>Good {timeOfDay()} ✨</h1>
           <p style={{ color: "var(--muted)", marginTop: 4 }}>{dateLabel}</p>
         </div>
-        <div style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>
+        <div style={{ background: "var(--accent-soft)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 18px", maxWidth: 340 }}>
           <p style={{ fontSize: 14, fontStyle: "italic", color: "#6d28d9", lineHeight: 1.5 }}>&quot;{quote.text}&quot;</p>
           <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>— {quote.author}</p>
         </div>
@@ -242,7 +242,7 @@ export default function DashboardView({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
         {[
-          { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "#db2777" },
+          { label: "Tasks today", value: `${completedToday}/${todayTasks.length}`, icon: "✅", color: "var(--primary)" },
           { label: "Habits done", value: `${habitsDoneToday}/${habits.length}`, icon: "🔥", color: "#f59e0b" },
           { label: "Best streak", value: `${maxStreak}d`, icon: "⚡", color: "#ef4444" },
           { label: "Overall progress", value: `${overallProgress}%`, icon: "📈", color: "#10b981" },
@@ -264,10 +264,10 @@ export default function DashboardView({
                 <span style={{ fontSize: 12, color: "var(--muted)" }}>
                   {todayDone} of {d.todayItems.length} done
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#ec4899" }}>{todayPct}%</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--primary)" }}>{todayPct}%</span>
               </div>
               <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${todayPct}%`, background: "linear-gradient(90deg, #ec4899, #a855f7)" }} />
+                <div className="progress-fill" style={{ width: `${todayPct}%`, background: "linear-gradient(90deg, var(--primary), var(--accent))" }} />
               </div>
             </div>
           )}
@@ -278,7 +278,7 @@ export default function DashboardView({
             noun="items"
             render={(item) => (
               <div key={item.id} style={rowStyle}>
-                <Check checked={item.completed} color="#ec4899" round onClick={() => tickToday(item)} label={item.text} />
+                <Check checked={item.completed} color="var(--primary)" round onClick={() => tickToday(item)} label={item.text} />
                 <span style={doneText(item.completed)}>{item.text}</span>
               </div>
             )}
@@ -357,7 +357,7 @@ export default function DashboardView({
             noun="events"
             render={(e) => (
               <div key={e.id} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-                <div style={{ background: "#f5f3ff", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>
+                <div style={{ background: "var(--accent-soft)", color: "var(--primary)", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, height: "fit-content", flexShrink: 0 }}>
                   {e.event_time?.slice(0, 5) ?? "—"}
                 </div>
                 <div>
@@ -410,15 +410,15 @@ export default function DashboardView({
           />
         </div>
 
-        <div className="lf-card" style={{ ...tile, border: "1px solid #fce7f3" }}>
+        <div className="lf-card" style={{ ...tile, border: "1px solid var(--primary-soft)" }}>
           <SectionHeader title="Want To Do" icon="🌟" action="Open" href="/dashboard/wantodo" />
           <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
             {[
-              { l: "Goals", v: d.wantItems.length, c: "#f472b6" },
-              { l: "Achieved", v: wantDone, c: "#fb923c" },
-              { l: "Dreaming", v: d.wantItems.length - wantDone, c: "#c084fc" },
+              { l: "Goals", v: d.wantItems.length, c: "var(--primary)" },
+              { l: "Achieved", v: wantDone, c: "var(--highlight)" },
+              { l: "Dreaming", v: d.wantItems.length - wantDone, c: "var(--accent)" },
             ].map((s) => (
-              <div key={s.l} style={{ flex: 1, textAlign: "center", background: "#fdf2f8", borderRadius: 10, padding: "8px 4px" }}>
+              <div key={s.l} style={{ flex: 1, textAlign: "center", background: "var(--primary-soft)", borderRadius: 10, padding: "8px 4px" }}>
                 <div style={{ fontWeight: 700, fontSize: 18, color: s.c }}>{s.v}</div>
                 <div style={{ fontSize: 10, color: "var(--muted)" }}>{s.l}</div>
               </div>

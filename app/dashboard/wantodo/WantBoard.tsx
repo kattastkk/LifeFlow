@@ -117,7 +117,7 @@ export default function WantBoard({ items: serverItems }: { items: WantItem[] })
     <>
       <form ref={formRef} onSubmit={submit} className="lf-card">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#f9a8d4,#fb923c)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,var(--primary-light),var(--highlight))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
             🌟
           </div>
           <h3 style={{ fontWeight: 600, color: "var(--foreground)", fontSize: 15 }}>{editId ? "Edit goal" : "Add new goal"}</h3>
@@ -147,7 +147,7 @@ export default function WantBoard({ items: serverItems }: { items: WantItem[] })
                 Cancel
               </button>
             )}
-            <button type="submit" style={{ padding: "10px 22px", borderRadius: 10, background: "linear-gradient(135deg,#f472b6,#fb923c)", color: "#fff", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}>
+            <button type="submit" style={{ padding: "10px 22px", borderRadius: 10, background: "linear-gradient(135deg,var(--primary),var(--highlight))", color: "var(--on-primary)", fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}>
               {editId ? "Save changes" : "Add goal"}
             </button>
           </div>
@@ -173,18 +173,18 @@ export default function WantBoard({ items: serverItems }: { items: WantItem[] })
         <div className="lf-card" style={{ padding: "16px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>Goals achieved</span>
-            <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,#f472b6,#fb923c)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(90deg,var(--primary),var(--highlight))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               {pct}%
             </span>
           </div>
-          <div style={{ height: 10, borderRadius: 5, background: "#fce7f3", overflow: "hidden" }}>
-            <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg,#f472b6,#fb923c)", width: `${pct}%`, transition: "width 0.5s ease" }} />
+          <div style={{ height: 10, borderRadius: 5, background: "var(--primary-soft)", overflow: "hidden" }}>
+            <div style={{ height: "100%", borderRadius: 5, background: "linear-gradient(90deg,var(--primary),var(--highlight))", width: `${pct}%`, transition: "width 0.5s ease" }} />
           </div>
         </div>
       )}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <button type="button" onClick={() => setFilterCat("All")} style={chip(activeCat === "All", "#f472b6")}>
+        <button type="button" onClick={() => setFilterCat("All")} style={chip(activeCat === "All", "var(--primary)")}>
           All ({total})
         </button>
         {allCats

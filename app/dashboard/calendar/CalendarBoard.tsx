@@ -14,7 +14,7 @@ const STATUSES = ["Confirmed", "Tentative", "Cancelled"];
 
 // Chip colors per kind of item.
 const KIND = {
-  event: { bg: "#fce7f3", fg: "#db2777", icon: "" },
+  event: { bg: "var(--primary-soft)", fg: "var(--primary)", icon: "" },
   homework: { bg: "#ffedd5", fg: "#c2410c", icon: "📚" },
   cancel: { bg: "#fee2e2", fg: "#dc2626", icon: "❌" },
   makeup: { bg: "#dcfce7", fg: "#15803d", icon: "🔁" },
@@ -229,8 +229,8 @@ export default function CalendarBoard({
                     padding: "4px 2px",
                     borderRadius: 8,
                     textAlign: "left",
-                    background: isSel ? "#fdf2f8" : "transparent",
-                    border: `1.5px solid ${isSel ? "#f9a8d4" : "transparent"}`,
+                    background: isSel ? "var(--primary-soft)" : "transparent",
+                    border: `1.5px solid ${isSel ? "var(--primary-light)" : "transparent"}`,
                     cursor: "pointer",
                     minWidth: 0,
                     display: "flex",
@@ -336,7 +336,7 @@ export default function CalendarBoard({
               <button
                 type="button"
                 onClick={() => pick(e.event_date)}
-                style={{ background: "#fdf2f8", color: "#db2777", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center", border: "none", cursor: "pointer" }}
+                style={{ background: "var(--primary-soft)", color: "var(--primary)", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, flexShrink: 0, minWidth: 60, textAlign: "center", border: "none", cursor: "pointer" }}
               >
                 <div>{e.event_date}</div>
                 <div>{hhmm(e.event_time)}</div>

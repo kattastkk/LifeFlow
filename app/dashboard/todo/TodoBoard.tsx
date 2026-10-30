@@ -345,7 +345,7 @@ export default function TodoBoard({ projects, items, order }: Board) {
     <>
       <form onSubmit={addProj} className="lf-card mt-6 flex gap-2">
         <input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="New project name..." className="lf-input" />
-        <button type="submit" className="lf-btn shrink-0 bg-sidebar-active text-white hover:opacity-90">
+        <button type="submit" className="lf-btn shrink-0 bg-sidebar-active text-on-primary hover:opacity-90">
           + Add Project
         </button>
       </form>

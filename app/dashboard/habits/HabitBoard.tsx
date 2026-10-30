@@ -218,7 +218,7 @@ export default function HabitBoard({ habits, completions, today }: Board & { tod
             {last7Days.map((d) => (
               <div
                 key={d}
-                style={{ textAlign: "center", fontSize: 11, color: d === today ? "#db2777" : "var(--muted)", fontWeight: d === today ? 700 : 400, padding: "4px 0" }}
+                style={{ textAlign: "center", fontSize: 11, color: d === today ? "var(--primary)" : "var(--muted)", fontWeight: d === today ? 700 : 400, padding: "4px 0" }}
               >
                 {dayLabel(d)}
                 <br />

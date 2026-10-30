@@ -9,7 +9,7 @@ export default async function WantToDoPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1000, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 16, background: "linear-gradient(135deg,#f9a8d4,#fb923c)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 16, background: "linear-gradient(135deg,var(--primary-light),var(--highlight))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>
           🌟
         </div>
         <div>

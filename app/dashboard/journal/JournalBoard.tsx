@@ -126,9 +126,9 @@ export default function JournalBoard({ entries: serverEntries, today }: { entrie
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 600,
-    border: `1.5px solid ${active ? "#db2777" : "var(--border)"}`,
-    background: active ? "#db2777" : "transparent",
-    color: active ? "#fff" : "var(--muted)",
+    border: `1.5px solid ${active ? "var(--primary)" : "var(--border)"}`,
+    background: active ? "var(--primary)" : "transparent",
+    color: active ? "var(--on-primary)" : "var(--muted)",
     cursor: "pointer",
   });
 
@@ -258,13 +258,13 @@ export default function JournalBoard({ entries: serverEntries, today }: { entrie
                 textAlign: "left",
                 padding: "12px 14px",
                 borderRadius: 12,
-                border: `1.5px solid ${e.date === date ? "#db2777" : "var(--border)"}`,
-                background: e.date === date ? "#fdf2f8" : "transparent",
+                border: `1.5px solid ${e.date === date ? "var(--primary)" : "var(--border)"}`,
+                background: e.date === date ? "var(--primary-soft)" : "transparent",
                 cursor: "pointer",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
-                <span style={{ color: "#db2777", fontWeight: 600 }}>📅 {e.date}</span>
+                <span style={{ color: "var(--primary)", fontWeight: 600 }}>📅 {e.date}</span>
                 <span style={{ color: "var(--muted)" }}>{filledCount(e)}/6</span>
               </div>
               <div style={{ fontSize: 13, color: "var(--muted)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.5 }}>
